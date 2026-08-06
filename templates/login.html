@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <div>
+        <h1>Login Page</h1>
+    </div>
+    
+    <div>
+        <h2>Login Form</h2>
+
+        <form action="{{ url_for('login') }}" method="post">
+        <p>input email here</p>
+        <input type="email" name="email" placeholder="Email" required>
+        
+
+        <p>input password here</p>
+        <input type="password" name="password" placeholder="Password" required>
+        
+        <button type="submit">Login</button>
+
+        </form>
+    </div>
+    <div>
+        <button>forgot password</button>
+        <a href="{{ url_for('register') }}">
+            <button>register</button>
+        </a>
+    </div>
+    <div>
+        <a href="{{ url_for('home') }}">
+            <button>Back to home page</button>
+        </a>
+    </div>
+</body>
+</html>

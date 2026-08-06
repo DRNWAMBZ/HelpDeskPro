@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelpDesk Pro</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/favicon.png') }}">
+</head>
+
+<body>
+<div class="progress-bar"></div>
+<div id="loader">
+
+    <div class="loader-content">
+
+        <div class="loader-logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="DRN TECH Logo">
+        </div>
+
+    </div>
+
+</div>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('home') }}" class="logo">
+            <h2>DRN TECH</h2>
+        </a>
+
+        <ul class="nav-links">
+            
+
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+
+            <li><a href="{{ url_for('register') }}">Register</a></li>
+
+            <li><a href="{{ url_for('guest') }}">Guest WiFi</a></li>
+
+        </ul>
+
+        <div class="hamburger" id="hamburger">
+
+            ☰
+
+        </div>
+
+    </nav>
+<div class="mobile-menu" id="mobileMenu">
+
+    <a href="{{ url_for('home') }}">Home</a>
+
+    <a href="#services">Services</a>
+
+    <a href="#why-us">Why Choose Us</a>
+
+    <a href="#contact">Contact</a>
+
+    <a href="{{ url_for('login') }}">Login</a>
+
+    <a href="{{ url_for('register') }}">Register</a>
+
+    <a href="{{ url_for('guest') }}">Guest WiFi</a>
+
+</div>
+
+    <section class="hero">
+
+    <div class="hero-background">
+
+    <span class="blob blob1"></span>
+
+    <span class="blob blob2"></span>
+
+    <span class="blob blob3"></span>
+
+</div>
+
+    <div class="hero-text">
+        <div class="hero-badge">
+    <span>🛡 Enterprise IT Support Platform</span>
+</div>
+
+        <h1>
+    Modern IT Support<br>
+    Made Simple
+</h1>
+
+<h3>HelpDesk Pro</h3>
+            <p>
+    Streamline IT operations with an all-in-one help desk platform.
+    Manage support tickets, live chat, guest WiFi access and IT requests
+    through one secure dashboard.
+</p>
+    
+        <div class="hero-buttons">
+
+            <a href="{{ url_for('login') }}">
+                <button class="login-btn">
+                    Login
+                </button>
+            </a>
+
+            <a href="{{ url_for('register') }}">
+                <button class="register-btn">
+                    Register
+                </button>
+            </a>
+
+
+        </div>
+
+    </div>
+
+
+    <div class="hero-image">
+
+        <img src="{{ url_for('static', filename='images/helpdesk.png') }}"
+             alt="HelpDesk Illustration">
+
+    </div>
+
+</section>
+<section class="services hidden " id="services">
+
+    <h2>Our Services</h2>
+
+    <p class="section-text">
+        Everything you need to manage IT support in one place.
+    </p> 
+
+    <div class="service-grid">
+    
+        <a href="{{ url_for('tickets') }}" class="service-card service-link">
+
+            <div class="service-icon">🛠️</div>
+
+            <h3>Ticket Management</h3>
+
+            <p>
+                Submit and track IT support requests quickly.
+            </p>
+
+        </a>
+
+        <a href="{{ url_for('guest') }}" class="service-card service-link">
+
+            <div class="service-icon">📶</div>
+
+            <h3>Guest WiFi</h3>
+
+            <p>
+                Secure temporary internet access for visitors.
+            </p>
+
+        </a>
+
+        <a href="{{ url_for('chat') }}" class="service-card service-link">
+
+            <div class="service-icon">💬</div>
+
+            <h3>Live Support</h3>
+
+            <p>
+                Chat with IT staff in real time.
+            </p>
+
+        </a>
+
+        <a href="{{ url_for('knowledge') }}" class="service-card service-link">
+
+            <div class="service-icon">📚</div>
+
+            <h3>Knowledge Base</h3>
+
+            <p>
+                Browse helpful articles and troubleshooting guides.
+            </p>
+
+        </a>
+
+    </div>
+</section>
+<section class="stats hidden" id="stats">
+    <h2>Platform Statistics</h2>
+
+    <p class="section-text">
+        Delivering reliable IT support every day.
+    </p>
+
+    <di class="stats-grid">
+
+        <div class="stat-card">
+
+            <h3 id="ticket-counter">0</h3>
+
+            <p>Tickets Resolved</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3 id="satisfaction-counter">0</h3>
+
+            <p>Customer Satisfaction</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3 id="support-counter">0</h3>
+
+            <p>Support Availability</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3 id="response-counter">0</h3>
+
+            <p>Average Response Time</p>
+
+
+        </div>
+    </div>
+
+</section>
+<section class="why-us hidden" id="why-us">
+
+    <div class="why-image">
+
+        <img src="{{ url_for('static', filename='images/security.png') }}"
+             alt="Built for Modern IT Teams">
+
+    </div>
+
+    <div class="why-content">
+
+        <h2>Built for Modern IT Teams</h2>
+
+        <p class="section-text">
+
+            Empowering organizations with secure authentication, efficient IT support and a modern user experience designed for productivity.
+
+        </p>
+
+        <div class="feature">
+
+            <span>✔</span>
+
+            <div>
+
+                <h3>Enterprise Security</h3>
+
+                <p>Secure authentication and protected user data.</p>
+
+            </div>
+
+        </div>
+
+        <div class="feature">
+
+            <span>✔</span>
+
+            <div>
+
+                <h3>Fast Support</h3>
+
+                <p>Quick ticket submission and rapid issue resolution.</p>
+
+            </div>
+
+        </div>
+
+        <div class="feature">
+
+            <span>✔</span>
+
+            <div>
+
+                <h3>User Friendly</h3>
+
+                <p>Simple interface that anyone can use with ease.</p>
+
+            </div>
+
+        </div>
+
+        <div class="feature">
+
+            <span>✔</span>
+
+            <div>
+
+                <h3>Scalable Platform</h3>
+
+                <p>Designed to grow alongside your organization.</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<section class="contact hidden" id="contact">
+
+    <h2>Contact Our IT Team</h2>
+
+    <p class="section-text">
+
+        Need assistance? Our support team is ready to help.
+
+    </p>
+
+    <div class="contact-grid">
+
+        <div class="contact-card">
+
+            <div class="contact-icon">📧</div>
+
+            <h3>Email</h3>
+
+    <p>
+        <a href="mailto:support@drntech.com?subject=HelpDesk%20Support%20Request">
+            support@drntech.com
+        </a>
+    </p>
+
+    </div>
+
+        <div class="contact-card">
+
+            <div class="contact-icon">📞</div>
+
+            <h3>Phone</h3>
+
+           <a href="tel:+2348001234567">
+                +234 800 123 4567
+            </a>
+
+        </div>
+
+        <div class="contact-card">
+
+            <div class="contact-icon">🕒</div>
+
+            <h3>Office Hours</h3>
+
+            <p>Monday - Friday</p>
+
+            <p>8:00 AM - 5:00 PM</p>
+
+        </div>
+
+        <div class="contact-card">
+
+            <div class="contact-icon">📍</div>
+
+            <h3>Location</h3>
+        <p>
+            <a href="https://maps.google.com/?q=Lagos,Nigeria"
+                target="_blank">
+                Lagos, Nigeria
+            </a>
+        </p>
+        </div>
+
+    </div>
+</section>
+
+<footer class="footer">
+
+    <div class="footer-container">
+
+        <div class="footer-section">
+
+            <h2>DRN TECH</h2>
+
+            <p>
+                Enterprise IT Support Platform designed for
+                secure, reliable and modern organizations.
+            </p>
+
+        </div>
+
+        <div class="footer-section">
+
+            <h3>Quick Links</h3>
+
+            <a href="{{ url_for('home') }}">Home</a>
+
+            <a href="{{ url_for('login') }}">Login</a>
+
+            <a href="{{ url_for('register') }}">Register</a>
+
+            <a href="{{ url_for('guest') }}">Guest WiFi</a>
+
+        </div>
+
+        <div class="footer-section">
+
+            <h3>Services</h3>
+
+            <a href="{{ url_for('tickets') }}">Ticket Management</a>
+
+            <a href="{{ url_for('chat') }}">Live Support</a>
+
+            <a href="{{ url_for('knowledge') }}">Knowledge Base</a>
+
+        </div>
+
+        <div class="footer-section">
+
+            <h3>Contact</h3>
+
+        <p>
+            
+            <a href="mailto:support@drntech.com?subject=HelpDesk%20Support%20Request">
+                📧 support@drntech.com
+            </a>
+        </p>    
+
+        <p>
+            
+            <a href="tel:+2348001234567">
+            📞 +234 800 123 4567
+            </a>
+        </p>
+
+            <p>
+                <a href="https://maps.google.com/?q=Lagos,Nigeria"
+                    target="_blank">
+                📍 Lagos, Nigeria
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div class="copyright">
+
+        <p>© 2026 DRN TECH. All Rights Reserved.</p>
+
+    </div>
+
+</footer>
+<button id="backToTop" title="Back to Top">
+    <span>⌃</span>
+</button>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
