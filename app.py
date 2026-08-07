@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -68,9 +68,27 @@ def login():
 
             return redirect(url_for("dashboard"))
 
-        return "Invalid email or password."
-
+        flash("Invalid email or password.", "danger")
+        return redirect(url_for("login"))
     return render_template("login.html")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = request.form["email"]
+
+        # Later we'll send an actual reset email here
+        flash(
+            "If an account with that email exists, a password reset link has been sent.",
+            "success"
+        )
+
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -110,8 +128,8 @@ def register():
 
         db.session.commit()
 
+        flash("Registration successful! Please login.", "success")
         return redirect(url_for("login"))
-
     return render_template("register.html")
 
 

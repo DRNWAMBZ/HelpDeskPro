@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+Dashboard
+
+{% endblock %}
+
+{% block content %}
+
+<header class="topbar">
+
+    <div class="topbar-left">
+
+        <h2>Dashboard</h2>
+
+    </div>
+
+    <div class="topbar-right">
+
+        <span>
+
+            Welcome,
+
+            <strong>{{ current_user.username }}</strong>
+
+        </span>
+
+    </div>
+
+</header>
+
+<section class="dashboard-content">
+
+    <h1>
+
+        Good to see you again 👋
+
+    </h1>
+
+    <p>
+
+        Here's a quick overview of today's support activity.
+
+    </p>
+
+</section>
+
+{% endblock %}

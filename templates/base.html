@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}HelpDesk Pro{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <h2>DRN TECH</h2>
+
+        </div>
+
+        <nav>
+
+            <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+
+            <a href="{{ url_for('tickets') }}">🎫 Tickets</a>
+
+            <a href="{{ url_for('chat') }}">💬 Live Chat</a>
+
+            <a href="{{ url_for('knowledge') }}">📚 Knowledge Base</a>
+
+            <a href="{{ url_for('guest') }}">📶 Guest WiFi</a>
+
+            <a href="#">⚙ Settings</a>
+
+            <a href="#">🚪 Logout</a>
+
+        </nav>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </main>
+
+</div>
+
+</body>
+
+</html>
