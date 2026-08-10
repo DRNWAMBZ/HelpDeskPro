@@ -70,7 +70,7 @@ def login():
 
         flash("Invalid email or password.", "danger")
         return redirect(url_for("login"))
-    return render_template("login.html")
+    return render_template("auth/login.html")
 
 
 @app.route("/forgot-password", methods=["GET", "POST"])
@@ -88,7 +88,7 @@ def forgot_password():
 
         return redirect(url_for("login"))
 
-    return render_template("forgot_password.html")
+    return render_template("auth/forgot_password.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -130,7 +130,7 @@ def register():
 
         flash("Registration successful! Please login.", "success")
         return redirect(url_for("login"))
-    return render_template("register.html")
+    return render_template("auth/register.html")
 
 
 @app.route("/guest")
@@ -141,7 +141,7 @@ def guest():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    return render_template("auth/dashboard.html")
 
 
 @app.route("/chat")
