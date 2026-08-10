@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}
+Create Ticket
+{% endblock %}
+
+{% block content %}
+
+<div class="ticket-form-page">
+
+    <div class="ticket-form-header">
+
+        <h1>Create a Support Ticket</h1>
+
+        <p>
+            Tell us what you're experiencing and we'll help you resolve it.
+        </p>
+
+    </div>
+
+
+    <form
+        action="{{ url_for('create_ticket') }}"
+        method="POST"
+        class="ticket-form">
+
+
+        <!-- Subject -->
+
+        <div class="input-group">
+
+            <label for="subject">
+                Subject
+            </label>
+
+            <input
+                type="text"
+                id="subject"
+                name="subject"
+                placeholder="Briefly describe your issue"
+                required>
+
+        </div>
+
+
+        <!-- Description -->
+
+        <div class="input-group">
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                id="description"
+                name="description"
+                rows="6"
+                placeholder="Describe your issue in detail..."
+                required></textarea>
+
+        </div>
+
+
+        <!-- Priority -->
+
+        <div class="input-group">
+
+            <label for="priority">
+                Priority
+            </label>
+
+            <select
+                id="priority"
+                name="priority"
+                required>
+
+                <option value="Low">
+                    Low
+                </option>
+
+                <option value="Medium" selected>
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Critical">
+                    Critical
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Submit -->
+
+        <button
+    type="submit"
+    class="submit-ticket-btn">
+
+    <i class="fa-solid fa-paper-plane"></i>
+
+    Submit Ticket
+
+</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}
+Settings
+{% endblock %}
+
+{% block content %}
+
+<div class="topbar-left">
+    <h2>Settings</h2>
+</div>
+
+<div class="topbar-right">
+    <span>
+        Welcome,
+        <strong>{{ current_user.username }}</strong>
+    </span>
+</div>
+
+<div class="settings-page">
+
+    <div class="settings-card">
+
+        <h1>Settings</h1>
+
+        <p>
+            Manage your HelpDesk Pro account settings.
+        </p>
+
+        <div class="settings-section">
+
+            <h3>Account</h3>
+
+            <div class="settings-item">
+                <span>Username</span>
+                <strong>{{ current_user.username }}</strong>
+            </div>
+
+            <div class="settings-item">
+                <span>Email</span>
+                <strong>{{ current_user.email }}</strong>
+            </div>
+
+        </div>
+
+        <div class="settings-section">
+
+            <h3>Security</h3>
+
+            <a href="{{ url_for('forgot_password') }}"
+               class="settings-button">
+                Change Password
+            </a>
+
+        </div>
+
+        <div class="settings-section">
+
+            <h3>Account Actions</h3>
+
+            <a href="{{ url_for('logout') }}"
+               class="settings-button logout-settings">
+                Logout
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
