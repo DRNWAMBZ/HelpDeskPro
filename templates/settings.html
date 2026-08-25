@@ -6,67 +6,452 @@ Settings
 
 {% block content %}
 
-<div class="topbar-left">
-    <h2>Settings</h2>
-</div>
 
-<div class="topbar-right">
-    <span>
-        Welcome,
-        <strong>{{ current_user.username }}</strong>
-    </span>
-</div>
+<!-- =====================================================
+     SETTINGS PAGE
+     ===================================================== -->
 
 <div class="settings-page">
 
-    <div class="settings-card">
 
-        <h1>Settings</h1>
+    <!-- =================================================
+         PAGE HEADER
+         ================================================= -->
 
-        <p>
-            Manage your HelpDesk Pro account settings.
-        </p>
+    <div class="settings-header">
 
-        <div class="settings-section">
+        <div>
 
-            <h3>Account</h3>
+            <span class="settings-eyebrow">
+                ACCOUNT
+            </span>
 
-            <div class="settings-item">
-                <span>Username</span>
-                <strong>{{ current_user.username }}</strong>
-            </div>
+            <h1>
+                Settings
+            </h1>
 
-            <div class="settings-item">
-                <span>Email</span>
-                <strong>{{ current_user.email }}</strong>
-            </div>
-
-        </div>
-
-        <div class="settings-section">
-
-            <h3>Security</h3>
-
-            <a href="{{ url_for('forgot_password') }}"
-               class="settings-button">
-                Change Password
-            </a>
+            <p>
+                Manage your account information and security.
+            </p>
 
         </div>
 
-        <div class="settings-section">
+    </div>
 
-            <h3>Account Actions</h3>
 
-            <a href="{{ url_for('logout') }}"
-               class="settings-button logout-settings">
-                Logout
+    <!-- =================================================
+         SETTINGS LAYOUT
+         ================================================= -->
+
+    <div class="settings-layout">
+
+
+        <!-- =============================================
+             SETTINGS NAVIGATION
+             ============================================= -->
+
+        <aside class="settings-navigation">
+
+            <span class="settings-nav-title">
+                Account Settings
+            </span>
+
+            <a
+                href="#account"
+                class="settings-nav-link"
+            >
+                <i class="fa-solid fa-user"></i>
+
+                <span>
+                    Account
+                </span>
             </a>
+
+
+            <a
+                href="#security"
+                class="settings-nav-link"
+            >
+                <i class="fa-solid fa-shield-halved"></i>
+
+                <span>
+                    Security
+                </span>
+            </a>
+
+
+            <a
+                href="#account-actions"
+                class="settings-nav-link"
+            >
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>
+                    Account Actions
+                </span>
+            </a>
+
+        </aside>
+
+
+        <!-- =============================================
+             SETTINGS CONTENT
+             ============================================= -->
+
+        <div class="settings-content">
+
+
+            <!-- =========================================
+                 ACCOUNT INFORMATION
+                 ========================================= -->
+
+            <section
+                class="settings-panel"
+                id="account"
+            >
+
+                <div class="settings-panel-header">
+
+                    <div class="settings-panel-icon">
+
+                        <i class="fa-solid fa-user"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Account
+                        </h2>
+
+                        <p>
+                            Your HelpDesk Pro account information.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="settings-information-list">
+
+
+                    <div class="settings-information-row">
+
+                        <div>
+
+                            <span class="settings-information-label">
+                                Username
+                            </span>
+
+                            <p>
+                                The name associated with your account.
+                            </p>
+
+                        </div>
+
+
+                        <strong>
+                            {{ current_user.username }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="settings-information-row">
+
+                        <div>
+
+                            <span class="settings-information-label">
+                                Email address
+                            </span>
+
+                            <p>
+                                Used to identify your HelpDesk Pro account.
+                            </p>
+
+                        </div>
+
+
+                        <strong>
+                            {{ current_user.email }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="settings-information-row">
+
+                        <div>
+
+                            <span class="settings-information-label">
+                                Account type
+                            </span>
+
+                            <p>
+                                Your current HelpDesk Pro access level.
+                            </p>
+
+                        </div>
+
+
+                        <span class="settings-role-badge">
+
+                            {% if current_user.is_admin %}
+                                Administrator
+                            {% else %}
+                                User
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =========================================
+                 SECURITY
+                 ========================================= -->
+
+            <section
+                class="settings-panel"
+                id="security"
+            >
+
+                <div class="settings-panel-header">
+
+                    <div class="settings-panel-icon">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Security
+                        </h2>
+
+                        <p>
+                            Manage your account password and security.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================
+                     CHANGE PASSWORD DROPDOWN
+                     ===================================== -->
+
+                <details class="settings-dropdown">
+
+                    <summary>
+
+                        <div class="settings-dropdown-main">
+
+                            <div class="settings-dropdown-icon">
+
+                                <i class="fa-solid fa-key"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Change Password
+                                </strong>
+
+                                <span>
+                                    Update the password used to access your account.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <i class="fa-solid fa-chevron-down settings-chevron"></i>
+
+                    </summary>
+
+
+                    <div class="settings-dropdown-content">
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('settings') }}"
+                            class="settings-password-form"
+                        >
+
+
+                            <div class="settings-form-group">
+
+                                <label for="current_password">
+                                    Current Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="current_password"
+                                    name="current_password"
+                                    placeholder="Enter your current password"
+                                    autocomplete="current-password"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <div class="settings-form-group">
+
+                                <label for="new_password">
+                                    New Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="new_password"
+                                    name="new_password"
+                                    placeholder="Minimum 8 characters"
+                                    minlength="8"
+                                    autocomplete="new-password"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <div class="settings-form-group">
+
+                                <label for="confirm_password">
+                                    Confirm New Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="confirm_password"
+                                    name="confirm_password"
+                                    placeholder="Enter the new password again"
+                                    minlength="8"
+                                    autocomplete="new-password"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <div class="settings-form-actions">
+
+                                <button
+                                    type="submit"
+                                    class="settings-primary-button"
+                                >
+
+                                    <i class="fa-solid fa-key"></i>
+
+                                    Update Password
+
+                                </button>
+
+                            </div>
+
+
+                        </form>
+
+
+                    </div>
+
+                </details>
+
+
+            </section>
+
+
+
+            <!-- =========================================
+                 ACCOUNT ACTIONS
+                 ========================================= -->
+
+            <section
+                class="settings-panel"
+                id="account-actions"
+            >
+
+                <div class="settings-panel-header">
+
+                    <div class="settings-panel-icon">
+
+                        <i class="fa-solid fa-sliders"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+                            Account Actions
+                        </h2>
+
+                        <p>
+                            Manage your current HelpDesk Pro session.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="settings-action-row">
+
+                    <div>
+
+                        <strong>
+                            Logout
+                        </strong>
+
+                        <p>
+                            Sign out of your current HelpDesk Pro session.
+                        </p>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('logout') }}"
+                        class="settings-logout-button"
+                    >
+
+                        <i class="fa-solid fa-right-from-bracket"></i>
+
+                        Logout
+
+                    </a>
+
+                </div>
+
+
+            </section>
+
 
         </div>
 
     </div>
 
 </div>
+
 
 {% endblock %}

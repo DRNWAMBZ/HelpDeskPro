@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}
+Ticket HDP-{{ "%04d"|format(ticket.id) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+
+        <div>
+
+            <span class="ticket-number">
+                Ticket HDP-{{ "%04d"|format(ticket.id) }}
+            </span>
+
+            <h1>{{ ticket.subject }}</h1>
+
+            <p>
+                Submitted by {{ ticket.user.username }}
+            </p>
+
+        </div>
+
+        <a
+            href="{{ url_for('admin_tickets') }}"
+            class="secondary-action-btn"
+        >
+            <i class="fa-solid fa-arrow-left"></i>
+            All Tickets
+        </a>
+
+    </div>
+
+
+    <div class="admin-card">
+
+        <div class="ticket-details-meta">
+
+            <div class="ticket-meta-item">
+                <span>User</span>
+                <strong>{{ ticket.user.username }}</strong>
+            </div>
+
+
+            <div class="ticket-meta-item">
+                <span>Email</span>
+                <strong>{{ ticket.user.email }}</strong>
+            </div>
+
+
+            <div class="ticket-meta-item">
+
+                <span>Priority</span>
+
+                <strong
+                    class="priority-badge
+                    priority-{{ ticket.priority|lower }}"
+                >
+                    {{ ticket.priority }}
+                </strong>
+
+            </div>
+
+
+            <div class="ticket-meta-item">
+
+                <span>Status</span>
+
+                <strong
+                    class="status-badge
+                    status-{{ ticket.status|lower|replace(' ', '-') }}"
+                >
+                    {{ ticket.status }}
+                </strong>
+
+            </div>
+
+
+            <div class="ticket-meta-item">
+
+                <span>Created</span>
+
+                <strong>
+                    {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="ticket-description">
+
+            <h3>
+                <i class="fa-solid fa-message"></i>
+                User Complaint
+            </h3>
+
+            <p>
+                {{ ticket.description }}
+            </p>
+        </div>
+<!-- =====================================================
+ SUPPORT CONVERSATION
+===================================================== -->
+
+<div class="ticket-conversation">
+
+    <div class="conversation-header">
+
+        <h3>
+            <i class="fa-solid fa-comments"></i>
+            Conversation
+        </h3>
+
+        <p>
+            Communicate directly with the user about this issue.
+        </p>
+
+    </div>
+
+
+    <div class="conversation-thread">
+
+        {% if replies %}
+
+            {% for reply in replies %}
+
+                <div
+                    class="conversation-message
+                    {% if reply.author.is_admin %}
+                        admin-message
+                    {% else %}
+                        user-message
+                    {% endif %}"
+                >
+
+                    <div class="message-header">
+
+                        <strong>
+
+                            {% if reply.author.is_admin %}
+
+                                {{ reply.author.username }}
+                                <span class="message-role">
+                                    Admin
+                                </span>
+
+                            {% else %}
+
+                                {{ reply.author.username }}
+
+                            {% endif %}
+
+                        </strong>
+
+                        <span>
+                            {{ reply.created_at.strftime('%d %b %Y, %H:%M') }}
+                        </span>
+
+                    </div>
+
+                    <p>
+                        {{ reply.message }}
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="conversation-empty">
+                No replies yet.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'admin_reply_to_ticket',
+            ticket_id=ticket.id
+        ) }}"
+        class="ticket-reply-form"
+    >
+
+        <label for="message">
+            Reply to User
+        </label>
+
+        <textarea
+            id="message"
+            name="message"
+            placeholder="Write a response to the user..."
+            required
+        ></textarea>
+
+        <button
+            type="submit"
+            class="admin-status-btn"
+        >
+            <i class="fa-solid fa-paper-plane"></i>
+            Send Reply
+        </button>
+
+    </form>
+
+</div>
+        <!-- =====================================================
+     ADMIN TICKET MANAGEMENT
+     ===================================================== -->
+
+<div class="admin-ticket-management">
+
+    <div class="admin-ticket-management-header">
+
+        <div>
+            <h3>Ticket Management</h3>
+
+            <p>
+                Update the current support status of this ticket.
+            </p>
+        </div>
+
+        <span
+            class="status-badge
+            status-{{ ticket.status|lower|replace(' ', '-') }}"
+        >
+            {{ ticket.status }}
+        </span>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'admin_update_ticket_status',
+            ticket_id=ticket.id
+        ) }}"
+        class="admin-status-form"
+    >
+
+        <label for="status">
+            Change Status
+        </label>
+
+        <div class="admin-status-controls">
+
+            <select
+                name="status"
+                id="status"
+                required
+            >
+
+                <option
+                    value="Open"
+                    {% if ticket.status == "Open" %}selected{% endif %}
+                >
+                    Open
+                </option>
+
+                <option
+                    value="In Progress"
+                    {% if ticket.status == "In Progress" %}selected{% endif %}
+                >
+                    In Progress
+                </option>
+
+                <option
+                    value="Resolved"
+                    {% if ticket.status == "Resolved" %}selected{% endif %}
+                >
+                    Resolved
+                </option>
+
+            </select>
+
+
+            <button
+                type="submit"
+                class="admin-status-btn"
+            >
+                <i class="fa-solid fa-floppy-disk"></i>
+                Update Status
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

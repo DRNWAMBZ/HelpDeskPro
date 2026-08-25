@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit User
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+
+        <div>
+            <h1>Edit User</h1>
+
+            <p>
+                Update account details and role.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin_users') }}"
+            class="secondary-action-btn"
+        >
+            ← Back to Users
+        </a>
+
+    </div>
+
+
+    <div class="admin-card">
+
+        <form
+            method="POST"
+            class="ticket-form"
+        >
+
+            <div class="input-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value="{{ user.username }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value="{{ user.email }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label for="role">
+                    Account Role
+                </label>
+
+                <select
+                    id="role"
+                    name="role"
+                    required
+                >
+
+                    <option
+                        value="user"
+                        {% if not user.is_admin %}selected{% endif %}
+                    >
+                        Normal User
+                    </option>
+
+                    <option
+                        value="admin"
+                        {% if user.is_admin %}selected{% endif %}
+                    >
+                        Administrator
+                    </option>
+
+                </select>
+
+            </div>
+            <div class="input-group">
+
+    <label for="new_password">
+        New Password
+    </label>
+
+    <input
+        type="password"
+        id="new_password"
+        name="new_password"
+        placeholder="Leave blank to keep current password"
+    >
+
+    <small>
+        Only enter a password if you want to reset this user's password.
+    </small>
+
+</div>
+
+
+            <div class="settings-actions">
+
+                <button
+                    type="submit"
+                    class="admin-status-btn"
+                >
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Changes
+                </button>
+
+                <a
+                    href="{{ url_for('admin_users') }}"
+                    class="secondary-action-btn"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

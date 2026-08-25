@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}
+Admin Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>
+                Welcome back, {{ current_user.username }} 👋
+                Here's an overview of your support activity.
+            </p>
+        </div>
+
+        <div class="admin-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            Administrator
+        </div>
+    </div>
+
+    <div class="admin-stats">
+
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            <div>
+                <span>Total Tickets</span>
+                <strong>{{ total_tickets }}</strong>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <div>
+                <span>Open Tickets</span>
+                <strong>{{ open_tickets }}</strong>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fa-solid fa-spinner"></i>
+            </div>
+            <div>
+                <span>In Progress</span>
+                <strong>{{ in_progress_tickets }}</strong>
+            </div>
+        </div>
+
+        <div class="admin-stat-card resolved">
+            <div class="admin-stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+                <span>Resolved</span>
+                <strong>{{ resolved_tickets }}</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="admin-section">
+
+        <div class="admin-section-header">
+            <div>
+                <h2>Recent Tickets</h2>
+                <p>Latest support requests from users.</p>
+            </div>
+
+            <a href="{{ url_for('admin_tickets') }}" class="admin-view-btn">
+                View Tickets
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        {% if recent_tickets %}
+
+        <ul class="admin-ticket-list">
+
+            {% for ticket in recent_tickets %}
+
+            <li class="admin-ticket-list-item">
+
+                <span class="ticket-bullet" aria-hidden="true"></span>
+
+                <div class="admin-ticket-list-main">
+                    <div class="admin-ticket-list-title">
+                        <a href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}">
+                            {{ ticket.subject }}
+                        </a>
+                    </div>
+
+                    <div class="admin-ticket-list-meta">
+                        <span>{{ ticket.user.username }}</span>
+
+                        <span class="priority-badge priority-{{ ticket.priority|lower }}">
+                            {{ ticket.priority }}
+                        </span>
+
+                        <span class="status-badge status-{{ ticket.status|lower|replace(' ', '-') }}">
+                            {{ ticket.status }}
+                        </span>
+
+                        <span>
+                            {% if ticket.created_at %}
+                                {{ ticket.created_at.strftime("%d %b %Y") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}"
+                    class="admin-list-view-btn"
+                >
+                    View
+                </a>
+
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <div class="empty-admin-state">
+            <i class="fa-solid fa-ticket"></i>
+            <h3>No tickets yet</h3>
+            <p>There are currently no support tickets in the system.</p>
+        </div>
+
+        {% endif %}
+
+        <div class="admin-section-actions">
+            <a href="{{ url_for('admin_users') }}" class="admin-view-btn">
+                <i class="fa-solid fa-users"></i>
+                Manage Users
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

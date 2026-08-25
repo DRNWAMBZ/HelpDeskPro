@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}
+Admin Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+
+        <div>
+            <h1>Admin Dashboard</h1>
+
+            <p>
+                Manage users, tickets and support activity.
+            </p>
+        </div>
+
+        <div class="admin-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            Administrator
+        </div>
+
+    </div>
+
+
+    <!-- Statistics -->
+
+    <div class="admin-stats">
+
+        <div class="admin-stat-card">
+
+            <i class="fa-solid fa-users"></i>
+
+            <div>
+                <span>Total Users</span>
+                <strong>{{ users|length }}</strong>
+            </div>
+
+        </div>
+
+
+        <div class="admin-stat-card">
+
+            <i class="fa-solid fa-ticket"></i>
+
+            <div>
+                <span>Total Tickets</span>
+                <strong>{{ tickets|length }}</strong>
+            </div>
+
+        </div>
+
+
+        <div class="admin-stat-card">
+
+            <i class="fa-solid fa-circle-exclamation"></i>
+
+            <div>
+                <span>Open Tickets</span>
+
+                <strong>
+                    {{ tickets|selectattr("status", "equalto", "Open")|list|length }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="admin-stat-card">
+
+            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            <div>
+                <span>Critical Tickets</span>
+
+                <strong>
+                    {{ tickets|selectattr("priority", "equalto", "Critical")|list|length }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Users -->
+
+    <div class="admin-card">
+
+        <div class="admin-card-header">
+
+            <div>
+                <h2>Users</h2>
+                <p>Registered HelpDesk Pro users.</p>
+            </div>
+
+        </div>
+
+
+        <div class="admin-table-wrapper">
+
+            <table class="admin-table">
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for user in users %}
+
+                    <tr>
+
+                        <td>
+                            #{{ user.id }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ user.username }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ user.email }}
+                        </td>
+
+                        <td>
+
+                            {% if user.is_admin %}
+
+                                <span class="admin-role">
+                                    Admin
+                                </span>
+
+                            {% else %}
+
+                                <span class="user-role">
+                                    User
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="4">
+                            No users found.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- Tickets -->
+
+    <div class="admin-card">
+
+        <div class="admin-card-header">
+
+            <div>
+                <h2>All Tickets</h2>
+                <p>Manage support requests from all users.</p>
+            </div>
+
+        </div>
+
+
+        <div class="admin-table-wrapper">
+
+            <table class="admin-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Ticket</th>
+                        <th>User</th>
+                        <th>Subject</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for ticket in tickets %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                #{{ ticket.ticket_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ ticket.user.username }}
+                        </td>
+
+                        <td>
+                            {{ ticket.subject }}
+                        </td>
+
+                        <td>
+
+                            {% if ticket.priority == "Critical" %}
+
+                                <span class="priority-critical">
+                                    Critical
+                                </span>
+
+                            {% elif ticket.priority == "High" %}
+
+                                <span class="priority-high">
+                                    High
+                                </span>
+
+                            {% elif ticket.priority == "Medium" %}
+
+                                <span class="priority-medium">
+                                    Medium
+                                </span>
+
+                            {% else %}
+
+                                <span class="priority-low">
+                                    Low
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ ticket.status }}
+                        </td>
+
+                        <td>
+                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td colspan="6">
+                            No tickets found.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

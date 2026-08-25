@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}
+Ticket Management
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+        <div>
+            <h1>Ticket Management</h1>
+            <p>Review and manage support requests from all users.</p>
+        </div>
+
+        <a href="{{ url_for('admin_dashboard') }}" class="secondary-action-btn">
+            ← Dashboard
+        </a>
+    </div>
+    <!-- =====================================================
+     TICKET SEARCH AND FILTERS
+     ===================================================== -->
+
+<div class="admin-ticket-toolbar">
+
+    <form
+        method="GET"
+        action="{{ url_for('admin_tickets') }}"
+        class="admin-ticket-filter-form"
+    >
+
+        <!-- SEARCH -->
+
+        <div class="admin-ticket-search">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="search"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search subject, user or email..."
+            >
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="admin-ticket-filter">
+
+            <label for="status">
+                Status
+            </label>
+
+            <select
+                name="status"
+                id="status"
+            >
+
+                <option value="">
+                    All Statuses
+                </option>
+
+                <option
+                    value="Open"
+                    {% if status_filter == "Open" %}selected{% endif %}
+                >
+                    Open
+                </option>
+
+                <option
+                    value="In Progress"
+                    {% if status_filter == "In Progress" %}selected{% endif %}
+                >
+                    In Progress
+                </option>
+
+                <option
+                    value="Resolved"
+                    {% if status_filter == "Resolved" %}selected{% endif %}
+                >
+                    Resolved
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="admin-ticket-filter">
+
+            <label for="priority">
+                Priority
+            </label>
+
+            <select
+                name="priority"
+                id="priority"
+            >
+
+                <option value="">
+                    All Priorities
+                </option>
+
+                <option
+                    value="Low"
+                    {% if priority_filter == "Low" %}selected{% endif %}
+                >
+                    Low
+                </option>
+
+                <option
+                    value="Medium"
+                    {% if priority_filter == "Medium" %}selected{% endif %}
+                >
+                    Medium
+                </option>
+
+                <option
+                    value="High"
+                    {% if priority_filter == "High" %}selected{% endif %}
+                >
+                    High
+                </option>
+
+                <option
+                    value="Critical"
+                    {% if priority_filter == "Critical" %}selected{% endif %}
+                >
+                    Critical
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- APPLY -->
+
+        <button
+            type="submit"
+            class="admin-filter-btn"
+        >
+            <i class="fa-solid fa-filter"></i>
+            Apply
+        </button>
+
+
+        <!-- CLEAR -->
+
+        {% if search or status_filter or priority_filter %}
+
+            <a
+                href="{{ url_for('admin_tickets') }}"
+                class="admin-clear-filter-btn"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+    <!-- OPEN -->
+    <div class="admin-card">
+
+        <div class="admin-card-header">
+            <div>
+                <h2>Open Tickets</h2>
+                <p>New support requests awaiting attention.</p>
+            </div>
+
+            <span class="status-badge status-open">
+                {{ open_tickets|length }}
+            </span>
+        </div>
+
+        {% if open_tickets %}
+
+        <ul class="admin-ticket-list">
+
+            {% for ticket in open_tickets %}
+
+            <li class="admin-ticket-list-item">
+
+                <span class="ticket-bullet" aria-hidden="true"></span>
+
+                <div class="admin-ticket-list-main">
+                    <div class="admin-ticket-list-title">
+                        <a href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}">
+                            {{ ticket.subject }}
+                        </a>
+                    </div>
+
+                    <div class="admin-ticket-list-meta">
+                        <span>{{ ticket.user.username }}</span>
+
+                        <span class="priority-badge priority-{{ ticket.priority|lower }}">
+                            {{ ticket.priority }}
+                        </span>
+
+                        <span>
+                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                        </span>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}"
+                    class="admin-list-view-btn"
+                >
+                    View
+                </a>
+
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% else %}
+            <div class="admin-list-empty">No open tickets.</div>
+        {% endif %}
+
+    </div>
+
+
+    <!-- IN PROGRESS -->
+    <div class="admin-card">
+
+        <div class="admin-card-header">
+            <div>
+                <h2>In Progress</h2>
+                <p>Tickets currently being worked on.</p>
+            </div>
+
+            <span class="status-badge status-in-progress">
+                {{ in_progress_tickets|length }}
+            </span>
+        </div>
+
+        {% if in_progress_tickets %}
+
+        <ul class="admin-ticket-list">
+
+            {% for ticket in in_progress_tickets %}
+
+            <li class="admin-ticket-list-item">
+
+                <span class="ticket-bullet" aria-hidden="true"></span>
+
+                <div class="admin-ticket-list-main">
+                    <div class="admin-ticket-list-title">
+                        <a href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}">
+                            {{ ticket.subject }}
+                        </a>
+                    </div>
+
+                    <div class="admin-ticket-list-meta">
+                        <span>{{ ticket.user.username }}</span>
+
+                        <span class="priority-badge priority-{{ ticket.priority|lower }}">
+                            {{ ticket.priority }}
+                        </span>
+
+                        <span>
+                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                        </span>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}"
+                    class="admin-list-view-btn"
+                >
+                    View
+                </a>
+
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% else %}
+            <div class="admin-list-empty">No tickets currently in progress.</div>
+        {% endif %}
+
+    </div>
+
+
+    <!-- RESOLVED -->
+    <div class="admin-card">
+
+        <div class="admin-card-header">
+            <div>
+                <h2>Resolved</h2>
+                <p>Completed support requests.</p>
+            </div>
+
+            <span class="status-badge status-resolved">
+                {{ resolved_tickets|length }}
+            </span>
+        </div>
+
+        {% if resolved_tickets %}
+
+        <ul class="admin-ticket-list">
+
+            {% for ticket in resolved_tickets %}
+
+            <li class="admin-ticket-list-item">
+
+                <span class="ticket-bullet" aria-hidden="true"></span>
+
+                <div class="admin-ticket-list-main">
+                    <div class="admin-ticket-list-title">
+                        <a href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}">
+                            {{ ticket.subject }}
+                        </a>
+                    </div>
+
+                    <div class="admin-ticket-list-meta">
+                        <span>{{ ticket.user.username }}</span>
+
+                        <span class="priority-badge priority-{{ ticket.priority|lower }}">
+                            {{ ticket.priority }}
+                        </span>
+
+                        <span>
+                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                        </span>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ url_for('admin_ticket_details', ticket_id=ticket.id) }}"
+                    class="admin-list-view-btn"
+                >
+                    View
+                </a>
+
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% else %}
+            <div class="admin-list-empty">No resolved tickets.</div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

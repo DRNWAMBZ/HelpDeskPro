@@ -17,164 +17,119 @@ Tickets
     </span>
 </div>
 
-
 <div class="tickets-page">
 
-    <!-- Page Header -->
     <div class="tickets-header">
 
         <div>
             <h1>My Tickets</h1>
-
-            <p>
-                View and manage your support requests.
-            </p>
+            <p>View and track your support requests.</p>
         </div>
 
-        <a href="{{ url_for('create_ticket') }}"
-           class="create-ticket-btn">
-
+        <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
             <i class="fa-solid fa-plus"></i>
-
             Create Ticket
-
         </a>
 
     </div>
 
+
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="flash-message {{ category }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
 
-    <!-- Tickets -->
     <div class="tickets-card">
 
         {% if tickets %}
 
-            <div class="tickets-table-wrapper">
+        <ul class="user-ticket-list user-ticket-list-full">
 
-                <table class="tickets-table">
+            {% for ticket in tickets %}
 
-                    <thead>
+            <li class="user-ticket-list-item">
 
-                        <tr>
+                <span class="ticket-bullet" aria-hidden="true"></span>
 
-                            <th>ID</th>
+                <a
+                    href="{{ url_for('ticket_details', ticket_id=ticket.id) }}"
+                    class="user-ticket-list-link"
+                >
 
-                            <th>Subject</th>
+                    <div class="user-ticket-list-main">
 
-                            <th>Priority</th>
+                        <strong>{{ ticket.subject }}</strong>
 
-                            <th>Status</th>
+                        <div class="user-ticket-list-meta">
 
-                            <th>Created</th>
+                            <span>
+                                HDP-{{ "%04d"|format(ticket.id) }}
+                            </span>
 
-                        </tr>
+                            <span
+                                class="priority-badge
+                                priority-{{ ticket.priority|lower }}"
+                            >
+                                {{ ticket.priority }}
+                            </span>
 
-                    </thead>
+                            <span
+                                class="status-badge
+                                status-{{ ticket.status|lower|replace(' ', '-') }}"
+                            >
+                                {{ ticket.status }}
+                            </span>
 
-                    <tbody>
+                            <span>
+                                {% if ticket.created_at %}
+                                    {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </span>
 
-                        {% for ticket in tickets %}
+                        </div>
 
-                            <tr>
+                    </div>
 
-                                <td>
-                                    #{{ ticket.id }}
-                                </td>
-
-                                <td>
-    <a
-        href="{{ url_for('ticket_details', ticket_id=ticket.id) }}"
-        class="ticket-subject">
-
-        <strong>{{ ticket.subject }}</strong>
-
-    </a>
-</td>
-                                <td>
-
-                                    <span
-                                        class="priority-badge
-                                        priority-{{ ticket.priority|lower }}">
-
-                                        {{ ticket.priority }}
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        class="status-badge
-                                        status-{{ ticket.status|lower|replace(' ', '-') }}">
-
-                                        {{ ticket.status }}
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    {% if ticket.created_at %}
-
-                                        {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        {% else %}
-
-            <!-- Empty State -->
-
-            <div class="empty-tickets">
-
-                <div class="empty-ticket-icon">
-
-                    <i class="fa-solid fa-ticket"></i>
-
-                </div>
-
-                <h2>No tickets yet</h2>
-
-                <p>
-                    You haven't created any support tickets yet.
-                </p>
-
-                <a href="{{ url_for('create_ticket') }}"
-                   class="create-ticket-btn">
-
-                    <i class="fa-solid fa-plus"></i>
-
-                    Create Your First Ticket
+                    <span class="user-ticket-arrow">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </span>
 
                 </a>
 
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <div class="empty-tickets">
+
+            <div class="empty-ticket-icon">
+                <i class="fa-solid fa-ticket"></i>
             </div>
+
+            <h2>No tickets yet</h2>
+
+            <p>
+                You haven't created any support tickets yet.
+            </p>
+
+            <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
+                <i class="fa-solid fa-plus"></i>
+                Create Your First Ticket
+            </a>
+
+        </div>
 
         {% endif %}
 

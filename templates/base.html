@@ -1,63 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
+<meta charset="UTF-8">
 
-<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta charset="UTF-8">
+<title>{% block title %}HelpDesk Pro{% endblock %}</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/dashboard.css') }}"
+>
 
-    <title>{% block title %}HelpDesk Pro{% endblock %}</title>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/admin.css') }}"
+>
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/dashboard.css') }}">
+<!-- Sidebar -->
 
-</head>
+<aside class="sidebar">
 
-<body>
+    <div class="logo">
 
-<div class="dashboard-layout">
+        <h2>DRN TECH</h2>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    </div>
 
-        <div class="logo">
 
-            <h2>DRN TECH</h2>
+    <nav>
+
+        {% if current_user.is_authenticated and current_user.is_admin %}
+
+            <!-- ========================= -->
+            <!-- ADMIN NAVIGATION -->
+            <!-- ========================= -->
+
+            <a href="{{ url_for('admin_dashboard') }}">
+                🏠 Dashboard
+            </a>
+
+            <a href="{{ url_for('admin_users') }}">
+                👥 Users
+            </a>
+
+            <a href="{{ url_for('admin_tickets') }}">
+                🎫 Tickets
+            </a>
+
+            <a href="{{ url_for('chat') }}">
+                💬 Live Chat
+            </a>
+
+            <a href="{{ url_for('knowledge') }}">
+                📚 Knowledge Base
+            </a>
+
+            <a href="{{ url_for('guest') }}">
+                📶 Guest WiFi
+            </a>
+
+            <a href="{{ url_for('settings') }}">
+                ⚙ Settings
+            </a>
+
+
+        {% else %}
+
+            <!-- ========================= -->
+            <!-- NORMAL USER NAVIGATION -->
+            <!-- ========================= -->
+
+            <a href="{{ url_for('dashboard') }}">
+                🏠 Dashboard
+            </a>
+
+            <a href="{{ url_for('tickets') }}">
+                🎫 My Tickets
+            </a>
+
+            <a href="{{ url_for('create_ticket') }}">
+                ➕ Create Ticket
+            </a>
+
+            <a href="{{ url_for('chat') }}">
+                💬 Live Chat
+            </a>
+
+            <a href="{{ url_for('knowledge') }}">
+                📚 Knowledge Base
+            </a>
+
+            <a href="{{ url_for('guest') }}">
+                📶 Guest WiFi
+            </a>
+
+            <a href="{{ url_for('settings') }}">
+                ⚙ Settings
+            </a>
+
+        {% endif %}
+
+
+        <!-- ========================= -->
+        <!-- LOGOUT -->
+        <!-- ========================= -->
+
+        <a href="{{ url_for('logout') }}">
+            🚪 Logout
+        </a>
+
+    </nav>
+
+</aside>
+
+
+<!-- Main Content -->
+
+<main class="main-content">
+    
+    <!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        <div class="global-flash-container">
+
+            {% for category, message in messages %}
+
+                <div class="global-flash-message {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
 
         </div>
 
-        <nav>
+    {% endif %}
 
-            <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+{% endwith %}
 
-            <a href="{{ url_for('tickets') }}">🎫 Tickets</a>
+    {% block content %}
 
-            <a href="{{ url_for('chat') }}">💬 Live Chat</a>
+    {% endblock %}
 
-            <a href="{{ url_for('knowledge') }}">📚 Knowledge Base</a>
-
-            <a href="{{ url_for('guest') }}">📶 Guest WiFi</a>
-
-            <a href="{{ url_for('settings') }}">⚙ Settings</a>
-
-            <a href="{{ url_for('logout') }}">🚪 Logout</a>
-
-        </nav>
-
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-
-        {% block content %}
-
-        {% endblock %}
-
-    </main>
-
-</div>
-
-</body>
-
-</html>
+</main>

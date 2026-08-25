@@ -1,53 +1,217 @@
 {% extends "base.html" %}
 
 {% block title %}
-
 Dashboard
-
 {% endblock %}
 
 {% block content %}
 
-<header class="topbar">
+<div class="user-dashboard">
 
-    <div class="topbar-left">
+    <section class="dashboard-welcome">
 
-        <h2>Dashboard</h2>
+        <div class="welcome-text">
+            <span class="welcome-label">DRN TECH SUPPORT</span>
 
-    </div>
+            <h1>
+                Good to see you again,
+                <strong>{{ current_user.username }}</strong> 👋
+            </h1>
 
-    <div class="topbar-right">
+            <p>
+                Here's a quick overview of your support requests and account activity.
+            </p>
+        </div>
 
-        <span>
+        <div class="welcome-action">
+            <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
+                <i class="fa-solid fa-plus"></i>
+                Create Ticket
+            </a>
+        </div>
 
-            Welcome,
+    </section>
 
-            <strong>{{ current_user.username }}</strong>
 
-        </span>
+    <section class="ticket-statistics">
 
-    </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎫</div>
+            <div class="stat-info">
+                <span>Total Tickets</span>
+                <strong>{{ total_tickets }}</strong>
+            </div>
+        </div>
 
-</header>
+        <div class="stat-card open-card">
+            <div class="stat-icon">🟠</div>
+            <div class="stat-info">
+                <span>Open</span>
+                <strong>{{ open_tickets }}</strong>
+            </div>
+        </div>
 
-<a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
-    <i class="fa-solid fa-plus"></i>
-    Create Ticket
-</a>
-<section class="dashboard-content">
+        <div class="stat-card progress-card">
+            <div class="stat-icon">🟡</div>
+            <div class="stat-info">
+                <span>In Progress</span>
+                <strong>{{ in_progress_tickets }}</strong>
+            </div>
+        </div>
 
-    <h1>
+        <div class="stat-card resolved-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-info">
+                <span>Resolved</span>
+                <strong>{{ resolved_tickets }}</strong>
+            </div>
+        </div>
 
-        Good to see you again 👋
+    </section>
 
-    </h1>
 
-    <p>
+    <section class="dashboard-grid">
 
-        Here's a quick overview of today's support activity.
+        <div class="dashboard-card recent-tickets-card">
 
-    </p>
+            <div class="card-header">
+                <div>
+                    <h2>Recent Tickets</h2>
+                    <p>Your latest support requests</p>
+                </div>
 
-</section>
+                <a href="{{ url_for('tickets') }}" class="view-all-link">
+                    View All
+                </a>
+            </div>
+
+
+            {% if recent_tickets %}
+
+            <ul class="user-ticket-list">
+
+                {% for ticket in recent_tickets %}
+
+                <li class="user-ticket-list-item">
+
+                    <span class="ticket-bullet" aria-hidden="true"></span>
+
+                    <a
+                        href="{{ url_for('ticket_details', ticket_id=ticket.id) }}"
+                        class="user-ticket-list-link"
+                    >
+                        <div class="user-ticket-list-main">
+                            <strong>{{ ticket.subject }}</strong>
+
+                            <div class="user-ticket-list-meta">
+                                <span>HDP-{{ "%04d"|format(ticket.id) }}</span>
+
+                                <span
+                                    class="status-badge
+                                    status-{{ ticket.status|lower|replace(' ', '-') }}"
+                                >
+                                    {{ ticket.status }}
+                                </span>
+
+                                <span>
+                                    {{ ticket.created_at.strftime("%d %b %Y") }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+            {% else %}
+
+            <div class="empty-dashboard">
+                <div class="empty-icon">🎫</div>
+                <h3>No tickets yet</h3>
+                <p>You haven't submitted any support tickets.</p>
+
+                <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Your First Ticket
+                </a>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="dashboard-card quick-actions-card">
+
+            <div class="card-header">
+                <div>
+                    <h2>Quick Actions</h2>
+                    <p>Get help faster</p>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+
+                <a href="{{ url_for('create_ticket') }}" class="quick-action">
+                    <span class="quick-action-icon">➕</span>
+                    <div>
+                        <strong>Create Ticket</strong>
+                        <span>Report a new issue</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('tickets') }}" class="quick-action">
+                    <span class="quick-action-icon">🎫</span>
+                    <div>
+                        <strong>My Tickets</strong>
+                        <span>Track your requests</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('knowledge') }}" class="quick-action">
+                    <span class="quick-action-icon">📚</span>
+                    <div>
+                        <strong>Knowledge Base</strong>
+                        <span>Find helpful solutions</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('chat') }}" class="quick-action">
+                    <span class="quick-action-icon">💬</span>
+                    <div>
+                        <strong>Live Chat</strong>
+                        <span>Talk to support</span>
+                    </div>
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="support-banner">
+
+        <div class="support-banner-icon">🛠️</div>
+
+        <div class="support-banner-content">
+            <h2>Need help?</h2>
+            <p>
+                Can't find the answer you're looking for?
+                Create a support ticket and our team will get back to you.
+            </p>
+        </div>
+
+        <a href="{{ url_for('create_ticket') }}" class="support-banner-btn">
+            Get Support
+        </a>
+
+    </section>
+
+</div>
 
 {% endblock %}
