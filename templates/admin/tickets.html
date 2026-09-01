@@ -189,6 +189,32 @@ Ticket Management
         </div>
 
 
+        <!-- SORT ORDER -->
+
+        <div class="admin-ticket-filter">
+
+            <label for="sort">
+                Sort by
+            </label>
+
+            <select name="sort" id="sort">
+                <option value="newest" {% if sort == "newest" %}selected{% endif %}>
+                    Newest first
+                </option>
+                <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>
+                    Oldest first
+                </option>
+                <option value="ticket_asc" {% if sort == "ticket_asc" %}selected{% endif %}>
+                    Ticket number: low to high
+                </option>
+                <option value="ticket_desc" {% if sort == "ticket_desc" %}selected{% endif %}>
+                    Ticket number: high to low
+                </option>
+            </select>
+
+        </div>
+
+
         <!-- APPLY -->
 
         <button
@@ -202,7 +228,7 @@ Ticket Management
 
         <!-- CLEAR -->
 
-        {% if search or status_filter or priority_filter or category_filter or due_filter %}
+        {% if search or status_filter or priority_filter or category_filter or due_filter or sort != "newest" %}
 
             <a
                 href="{{ url_for('admin_tickets') }}"

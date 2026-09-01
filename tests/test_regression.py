@@ -218,7 +218,7 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertIn(b"Live chat satisfaction", response.data)
         self.assertIn(b"Network &amp; WiFi", response.data)
 
-        response = admin_client.get("/admin/tickets?due=overdue")
+        response = admin_client.get("/admin/tickets?due=overdue&sort=ticket_asc")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Overdue router replacement", response.data)
 

@@ -1710,7 +1710,7 @@ def create_ticket():
         db.session.commit()
 
         flash(
-            f"Ticket HDP-{next_ticket_number:04d} created successfully!",
+            f"Ticket #{next_ticket_number} created successfully!",
             "success",
         )
 
@@ -1898,7 +1898,7 @@ def reply_to_ticket(ticket_id):
             ticket_id=ticket.id,
             message=(
                 f"{current_user.username} replied to ticket "
-                f"HDP-{ticket.ticket_number:04d}."
+                f"#{ticket.ticket_number}."
             ),
         )
 
@@ -2943,6 +2943,11 @@ def admin_tickets():
         "",
     ).strip()
 
+    sort = request.args.get(
+        "sort",
+        "newest",
+    ).strip()
+
     # Start with every ticket
     query = Ticket.query.join(User)
 
@@ -3032,9 +3037,17 @@ def admin_tickets():
     # GET FILTERED TICKETS
     # ---------------------------------
 
-    filtered_tickets = query.order_by(
-        Ticket.created_at.desc()
-    ).all()
+    sort_options = {
+        "newest": Ticket.created_at.desc(),
+        "oldest": Ticket.created_at.asc(),
+        "ticket_asc": Ticket.ticket_number.asc(),
+        "ticket_desc": Ticket.ticket_number.desc(),
+    }
+
+    if sort not in sort_options:
+        sort = "newest"
+
+    filtered_tickets = query.order_by(sort_options[sort]).all()
 
     # Keep your current queue layout
     open_tickets = [
@@ -3067,6 +3080,7 @@ def admin_tickets():
         priority_filter=priority_filter,
         category_filter=category_filter,
         due_filter=due_filter,
+        sort=sort,
         ticket_categories=TICKET_CATEGORIES,
     )
 # -------------------------
@@ -3172,7 +3186,7 @@ def admin_update_ticket_status(ticket_id):
             recipient_id=ticket.user_id,
             ticket_id=ticket.id,
             message=(
-                f"Your ticket HDP-{ticket.ticket_number:04d} "
+                f"Your ticket #{ticket.ticket_number} "
                 "has been resolved."
             ),
         )
@@ -3259,7 +3273,7 @@ def admin_ticket_progress_update(ticket_id):
             ticket_id=ticket.id,
             message=(
                 f"Support posted a progress update on ticket "
-                f"HDP-{ticket.ticket_number:04d}."
+                f"#{ticket.ticket_number}."
             ),
         )
 
@@ -3319,7 +3333,7 @@ def admin_reply_to_ticket(ticket_id):
             ticket_id=ticket.id,
             message=(
                 f"Support replied to your ticket "
-                f"HDP-{ticket.ticket_number:04d}."
+                f"#{ticket.ticket_number}."
             ),
         )
 
