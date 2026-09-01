@@ -206,6 +206,7 @@ class HelpDeskRegressionTests(unittest.TestCase):
                 rating=5,
             ))
             db.session.commit()
+            overdue_ticket_id = overdue_ticket.id
 
         admin_client = app.test_client()
         self.sign_in(admin_client, "admin-one@example.test")
@@ -216,6 +217,27 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertIn(b"Overdue", response.data)
         self.assertIn(b"Live chat satisfaction", response.data)
         self.assertIn(b"Network &amp; WiFi", response.data)
+
+        response = admin_client.get("/admin/tickets?due=overdue")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Overdue router replacement", response.data)
+
+        token = self.csrf_token(
+            admin_client,
+            f"/admin/ticket/{overdue_ticket_id}",
+        )
+        response = admin_client.post(
+            f"/admin/ticket/{overdue_ticket_id}/due-date",
+            data={
+                "csrf_token": token,
+                "due_at": "2026-01-01T09:00",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        with app.app_context():
+            ticket = db.session.get(Ticket, overdue_ticket_id)
+            self.assertEqual(ticket.status, "Open")
 
     def test_chat_claim_feedback_and_close(self):
         user_client = app.test_client()

@@ -1710,7 +1710,7 @@ def create_ticket():
         db.session.commit()
 
         flash(
-            f"Ticket #{next_ticket_number} created successfully!",
+            f"Ticket HDP-{next_ticket_number:04d} created successfully!",
             "success",
         )
 
@@ -2938,6 +2938,11 @@ def admin_tickets():
         "",
     ).strip()
 
+    due_filter = request.args.get(
+        "due",
+        "",
+    ).strip()
+
     # Start with every ticket
     query = Ticket.query.join(User)
 
@@ -3001,6 +3006,29 @@ def admin_tickets():
         )
 
     # ---------------------------------
+    # DUE DATE / SLA FILTER
+    # ---------------------------------
+
+    now = datetime.utcnow()
+    due_soon_cutoff = now + timedelta(hours=24)
+
+    if due_filter == "overdue":
+        query = query.filter(
+            Ticket.status != "Resolved",
+            Ticket.due_at.isnot(None),
+            Ticket.due_at < now,
+        )
+    elif due_filter == "due_soon":
+        query = query.filter(
+            Ticket.status != "Resolved",
+            Ticket.due_at.isnot(None),
+            Ticket.due_at >= now,
+            Ticket.due_at <= due_soon_cutoff,
+        )
+    elif due_filter == "no_due_date":
+        query = query.filter(Ticket.due_at.is_(None))
+
+    # ---------------------------------
     # GET FILTERED TICKETS
     # ---------------------------------
 
@@ -3038,6 +3066,7 @@ def admin_tickets():
         status_filter=status_filter,
         priority_filter=priority_filter,
         category_filter=category_filter,
+        due_filter=due_filter,
         ticket_categories=TICKET_CATEGORIES,
     )
 # -------------------------

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-Ticket HDP-{{ "%04d"|format(ticket.id) }}
+Ticket HDP-{{ "%04d"|format(ticket.ticket_number) }}
 {% endblock %}
 
 {% block content %}
@@ -13,7 +13,7 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
         <div>
 
             <span class="ticket-number">
-                Ticket HDP-{{ "%04d"|format(ticket.id) }}
+                Ticket HDP-{{ "%04d"|format(ticket.ticket_number) }}
             </span>
 
             <h1>{{ ticket.subject }}</h1>

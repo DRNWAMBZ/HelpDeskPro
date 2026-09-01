@@ -67,7 +67,16 @@ Admin Dashboard
 
     </div>
 
-    <section class="admin-report-grid" aria-label="Support reports">
+    <section class="admin-reporting" aria-label="Support reports">
+        <div class="admin-reporting-header">
+            <div>
+                <span class="admin-reporting-eyebrow">Support snapshot</span>
+                <h2>What needs attention today</h2>
+            </div>
+            <span class="admin-reporting-live"><i class="fa-solid fa-circle" aria-hidden="true"></i> Live data</span>
+        </div>
+
+    <div class="admin-report-grid">
 
         <div class="admin-report-card admin-report-card-alert">
             <div class="admin-report-card-heading">
@@ -78,15 +87,15 @@ Admin Dashboard
                 </div>
             </div>
             <div class="admin-report-metrics">
-                <div>
+                <div class="report-metric-overdue">
                     <strong>{{ overdue_tickets }}</strong>
                     <span>Overdue</span>
                 </div>
-                <div>
+                <div class="report-metric-soon">
                     <strong>{{ due_soon_tickets }}</strong>
                     <span>Due within 24 hours</span>
                 </div>
-                <div>
+                <div class="report-metric-critical">
                     <strong>{{ critical_open_tickets }}</strong>
                     <span>Critical and unresolved</span>
                 </div>
@@ -96,7 +105,7 @@ Admin Dashboard
             </a>
         </div>
 
-        <div class="admin-report-card">
+        <div class="admin-report-card admin-report-card-activity">
             <div class="admin-report-card-heading">
                 <span class="admin-report-icon"><i class="fa-solid fa-chart-line"></i></span>
                 <div>
@@ -111,7 +120,7 @@ Admin Dashboard
             <p class="admin-report-note">Use ticket status and due dates to keep the queue moving.</p>
         </div>
 
-        <div class="admin-report-card">
+        <div class="admin-report-card admin-report-card-satisfaction">
             <div class="admin-report-card-heading">
                 <span class="admin-report-icon"><i class="fa-solid fa-star"></i></span>
                 <div>
@@ -157,6 +166,7 @@ Admin Dashboard
             {% endif %}
         </div>
 
+    </div>
     </section>
 
     <div class="admin-section">
