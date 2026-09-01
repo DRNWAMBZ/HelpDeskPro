@@ -423,6 +423,15 @@ class TicketInternalNote(db.Model):
     author = db.relationship("User")
 
 
+class TicketTag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(40), nullable=False)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("ticket.id"), nullable=False, index=True)
+    ticket = db.relationship("Ticket", backref=db.backref("tags", lazy=True, cascade="all, delete-orphan"))
+
+    __table_args__ = (db.UniqueConstraint("ticket_id", "name", name="uq_ticket_tag_name"),)
+
+
 # -------------------------
 # LIVE CHAT MODELS
 # -------------------------
@@ -3202,6 +3211,27 @@ def add_ticket_internal_note(ticket_id):
         db.session.commit()
         flash("Internal note saved. Staff cannot see it.", "success")
 
+    return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
+
+
+@app.route("/admin/ticket/<int:ticket_id>/tags", methods=["POST"])
+@admin_required
+def update_ticket_tags(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    requested_tags = {
+        tag.strip().lower()
+        for tag in request.form.get("tags", "").split(",")
+        if tag.strip()
+    }
+
+    if any(len(tag) > 40 for tag in requested_tags):
+        flash("Each tag must be 40 characters or fewer.", "danger")
+        return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
+
+    TicketTag.query.filter_by(ticket_id=ticket.id).delete()
+    db.session.add_all([TicketTag(ticket_id=ticket.id, name=tag) for tag in requested_tags])
+    db.session.commit()
+    flash("Ticket tags updated.", "success")
     return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
 
 

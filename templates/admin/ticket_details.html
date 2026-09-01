@@ -287,6 +287,19 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
         <button type="submit" class="admin-status-btn"><i class="fa-solid fa-lock" aria-hidden="true"></i> Save Internal Note</button>
     </form>
 </section>
+
+<section class="internal-notes" aria-labelledby="ticket-tags-heading">
+    <div class="conversation-header">
+        <h3 id="ticket-tags-heading"><i class="fa-solid fa-tags" aria-hidden="true"></i> Ticket Tags</h3>
+        <p>Private labels that help administrators group related support work.</p>
+    </div>
+    <form method="POST" action="{{ url_for('update_ticket_tags', ticket_id=ticket.id) }}" class="internal-note-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="ticket-tags">Tags, separated by commas</label>
+        <input id="ticket-tags" name="tags" maxlength="500" value="{{ ticket.tags|map(attribute='name')|sort|join(', ') }}" placeholder="wifi, router, needs follow-up">
+        <button type="submit" class="admin-status-btn"><i class="fa-solid fa-tags" aria-hidden="true"></i> Save Tags</button>
+    </form>
+</section>
         <!-- =====================================================
      ADMIN TICKET MANAGEMENT
      ===================================================== -->
