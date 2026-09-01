@@ -43,6 +43,17 @@ Ticket #{{ ticket.id }}
 
         <div class="ticket-meta-item">
 
+            <span>Category</span>
+
+            <strong>
+                {{ ticket.category }}
+            </strong>
+
+        </div>
+
+
+        <div class="ticket-meta-item">
+
             <span>Status</span>
 
             <strong>
@@ -182,6 +193,8 @@ Ticket #{{ ticket.id }}
             ) }}"
             class="ticket-reply-form"
         >
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
             <label for="message">
                 Add Reply

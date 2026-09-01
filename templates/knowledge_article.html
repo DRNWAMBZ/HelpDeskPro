@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ article.title }} | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<article class="knowledge-article-page">
+    <a href="{{ url_for('knowledge') }}" class="knowledge-back-link">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        Back to Knowledge Base
+    </a>
+
+    <header class="knowledge-article-header">
+        <span class="knowledge-category">{{ article.category }}</span>
+        <h1>{{ article.title }}</h1>
+        <p>Last updated {{ article.updated_at.strftime("%d %b %Y") }}</p>
+    </header>
+
+    <div class="knowledge-article-body">
+        {{ article.content }}
+    </div>
+
+    {% if article.images %}
+        <div class="knowledge-article-visuals">
+            {% for image in article.images|sort(attribute='sort_order') %}
+                <figure class="knowledge-article-visual">
+                    <img
+                        src="{{ url_for('static', filename=image.image_path) }}"
+                        alt="{{ image.alt_text }}"
+                    >
+
+                    {% if image.caption %}
+                        <figcaption>{{ image.caption }}</figcaption>
+                    {% endif %}
+                </figure>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <footer class="knowledge-article-footer">
+        <div>
+            <span class="knowledge-eyebrow">Need more help?</span>
+            <h2>This did not solve it?</h2>
+            <p>Send the details to support and we will investigate.</p>
+        </div>
+
+        <a href="{{ url_for('create_ticket') }}" class="knowledge-cta-button">
+            Create a ticket
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    </footer>
+</article>
+
+{% endblock %}

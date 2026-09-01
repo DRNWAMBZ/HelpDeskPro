@@ -1,12 +1,22 @@
 from sqlalchemy import text, or_
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
+from hmac import compare_digest
+from secrets import token_urlsafe
+from pathlib import Path
+from hashlib import sha256
+from email.message import EmailMessage
+import os
+import smtplib
+import warnings
 
 from flask import (
     Flask,
+    abort,
     render_template,
     request,
     redirect,
+    session,
     url_for,
     flash,
 )
@@ -27,6 +37,8 @@ from werkzeug.security import (
     check_password_hash,
 )
 
+from PIL import Image, UnidentifiedImageError
+
 
 # =========================================================
 # APPLICATION SETUP
@@ -34,9 +46,65 @@ from werkzeug.security import (
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = "helpdeskpro_secret_key"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///helpdesk.db"
+app_environment = os.environ.get("APP_ENV", "development").lower()
+secret_key = os.environ.get("SECRET_KEY")
+
+if app_environment == "production" and not secret_key:
+    raise RuntimeError("SECRET_KEY must be set in production.")
+
+database_url = os.environ.get("DATABASE_URL", "sqlite:///helpdesk.db")
+
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace(
+        "postgres://",
+        "postgresql+psycopg://",
+        1,
+    )
+elif database_url.startswith("postgresql://"):
+    database_url = database_url.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1,
+    )
+
+app.config["SECRET_KEY"] = secret_key or "local-development-key-only"
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = app_environment == "production"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
+app.config["PREFERRED_URL_SCHEME"] = (
+    "https"
+    if app_environment == "production"
+    else "http"
+)
+app.config["RESET_TOKEN_TTL_MINUTES"] = 60
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", "587"))
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_FROM"] = os.environ.get("MAIL_FROM")
+app.config["MAIL_USE_TLS"] = (
+    os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+)
+
+KNOWLEDGE_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+KNOWLEDGE_IMAGE_MAX_PIXELS = 25_000_000
+KNOWLEDGE_IMAGE_EXTENSIONS = {
+    "JPEG": "jpg",
+    "PNG": "png",
+    "WEBP": "webp",
+}
+
+TICKET_CATEGORIES = (
+    "Account Access",
+    "Hardware",
+    "Network & WiFi",
+    "Software",
+    "Other",
+)
 
 db = SQLAlchemy(app)
 
@@ -98,6 +166,54 @@ class User(UserMixin, db.Model):
 
 
 # -------------------------
+# PASSWORD RESET TOKEN MODEL
+# -------------------------
+
+class PasswordResetToken(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    token_hash = db.Column(
+        db.String(64),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    expires_at = db.Column(
+        db.DateTime,
+        nullable=False,
+    )
+
+    used_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True,
+    )
+
+    user = db.relationship(
+        "User",
+        backref=db.backref(
+            "password_reset_tokens",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    def __repr__(self):
+        return f"<PasswordResetToken {self.id}>"
+
+
+# -------------------------
 # TICKET MODEL
 # -------------------------
 
@@ -127,6 +243,12 @@ class Ticket(db.Model):
         db.String(20),
         nullable=False,
         default="Medium",
+    )
+
+    category = db.Column(
+        db.String(50),
+        nullable=False,
+        default="Other",
     )
 
     status = db.Column(
@@ -209,6 +331,279 @@ class TicketReply(db.Model):
         return f"<TicketReply {self.id}>"
 
 
+# -------------------------
+# LIVE CHAT MODELS
+# -------------------------
+
+class ChatConversation(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        unique=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    last_message_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    user = db.relationship(
+        "User",
+        backref=db.backref(
+            "chat_conversation",
+            uselist=False,
+        ),
+    )
+
+    def __repr__(self):
+        return f"<ChatConversation {self.id}>"
+
+
+class ChatMessage(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    message = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    is_read = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    conversation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("chat_conversation.id"),
+        nullable=False,
+        index=True,
+    )
+
+    sender_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+    )
+
+    conversation = db.relationship(
+        "ChatConversation",
+        backref=db.backref(
+            "messages",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    sender = db.relationship("User")
+
+    def __repr__(self):
+        return f"<ChatMessage {self.id}>"
+
+
+# -------------------------
+# NOTIFICATION MODEL
+# -------------------------
+
+class Notification(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    recipient_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True,
+    )
+
+    ticket_id = db.Column(
+        db.Integer,
+        db.ForeignKey("ticket.id"),
+        nullable=False,
+        index=True,
+    )
+
+    message = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    is_read = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    recipient = db.relationship(
+        "User",
+        backref=db.backref(
+            "notifications",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    ticket = db.relationship(
+        "Ticket",
+        backref=db.backref(
+            "notifications",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    def __repr__(self):
+        return f"<Notification {self.id}>"
+
+
+# -------------------------
+# KNOWLEDGE ARTICLE MODEL
+# -------------------------
+
+class KnowledgeArticle(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    title = db.Column(
+        db.String(200),
+        nullable=False,
+    )
+
+    category = db.Column(
+        db.String(100),
+        nullable=False,
+        default="General",
+    )
+
+    content = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    is_published = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    author_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+    )
+
+    author = db.relationship(
+        "User",
+        backref=db.backref(
+            "knowledge_articles",
+            lazy=True,
+        ),
+    )
+
+    def __repr__(self):
+        return f"<KnowledgeArticle {self.id}: {self.title}>"
+
+
+# -------------------------
+# KNOWLEDGE ARTICLE IMAGE MODEL
+# -------------------------
+
+class KnowledgeArticleImage(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    image_path = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    alt_text = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    caption = db.Column(
+        db.String(255),
+        nullable=True,
+    )
+
+    sort_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    article_id = db.Column(
+        db.Integer,
+        db.ForeignKey("knowledge_article.id"),
+        nullable=False,
+    )
+
+    article = db.relationship(
+        "KnowledgeArticle",
+        backref=db.backref(
+            "images",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    def __repr__(self):
+        return f"<KnowledgeArticleImage {self.id}>"
+
+
 # =========================================================
 # LOGIN / ACCESS HELPERS
 # =========================================================
@@ -249,6 +644,250 @@ def admin_required(f):
     return decorated_function
 
 
+def create_notification(recipient_id, ticket_id, message):
+
+    db.session.add(
+        Notification(
+            recipient_id=recipient_id,
+            ticket_id=ticket_id,
+            message=message,
+        )
+    )
+
+
+def get_csrf_token():
+
+    csrf_token = session.get("_csrf_token")
+
+    if not csrf_token:
+        csrf_token = token_urlsafe(32)
+        session["_csrf_token"] = csrf_token
+
+    return csrf_token
+
+
+def validate_csrf_token():
+
+    csrf_token = session.get("_csrf_token", "")
+    submitted_token = request.form.get("csrf_token", "")
+
+    if (
+        not csrf_token
+        or not submitted_token
+        or not compare_digest(csrf_token, submitted_token)
+    ):
+        abort(400)
+
+
+@app.before_request
+def protect_post_requests():
+
+    if request.method == "POST":
+        validate_csrf_token()
+
+
+@app.after_request
+def apply_security_headers(response):
+
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' https://cdnjs.cloudflare.com; "
+        "font-src 'self' https://cdnjs.cloudflare.com; "
+        "img-src 'self' data:; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'self'",
+    )
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin",
+    )
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(), microphone=(), geolocation=()",
+    )
+
+    if app_environment == "production":
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+
+    if request.endpoint in {
+        "login",
+        "forgot_password",
+        "reset_password",
+        "settings",
+    }:
+        response.headers["Cache-Control"] = "no-store"
+
+    return response
+
+
+def hash_reset_token(token):
+
+    return sha256(token.encode("utf-8")).hexdigest()
+
+
+def get_valid_reset_token(token):
+
+    return PasswordResetToken.query.filter(
+        PasswordResetToken.token_hash == hash_reset_token(token),
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > datetime.utcnow(),
+    ).first()
+
+
+def send_password_reset_email(user, token):
+
+    if not app.config["MAIL_SERVER"] or not app.config["MAIL_FROM"]:
+        return False
+
+    if bool(app.config["MAIL_USERNAME"]) != bool(
+        app.config["MAIL_PASSWORD"]
+    ):
+        return False
+
+    reset_url = url_for(
+        "reset_password",
+        token=token,
+        _external=True,
+    )
+
+    email = EmailMessage()
+    email["Subject"] = "Reset your HelpDesk Pro password"
+    email["From"] = app.config["MAIL_FROM"]
+    email["To"] = user.email
+    email.set_content(
+        "We received a request to reset your HelpDesk Pro password.\n\n"
+        f"Use this one-time link within {app.config['RESET_TOKEN_TTL_MINUTES']} "
+        f"minutes:\n{reset_url}\n\n"
+        "If you did not request this, you can safely ignore this email."
+    )
+
+    try:
+        with smtplib.SMTP(
+            app.config["MAIL_SERVER"],
+            app.config["MAIL_PORT"],
+            timeout=10,
+        ) as smtp:
+            if app.config["MAIL_USE_TLS"]:
+                smtp.starttls()
+
+            if app.config["MAIL_USERNAME"]:
+                smtp.login(
+                    app.config["MAIL_USERNAME"],
+                    app.config["MAIL_PASSWORD"],
+                )
+
+            smtp.send_message(email)
+    except (OSError, smtplib.SMTPException):
+        return False
+
+    return True
+
+
+def add_knowledge_article_image(article):
+
+    upload = request.files.get("article_image")
+
+    if not upload or not upload.filename:
+        return None, None
+
+    caption = request.form.get(
+        "image_caption",
+        "",
+    ).strip()
+
+    if len(caption) > 255:
+        return "The image caption is too long.", None
+
+    try:
+        upload.stream.seek(0, 2)
+        file_size = upload.stream.tell()
+        upload.stream.seek(0)
+    except (AttributeError, OSError):
+        return "The selected image could not be read.", None
+
+    if file_size > KNOWLEDGE_IMAGE_MAX_BYTES:
+        return "Images must be 5 MB or smaller.", None
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter(
+                "error",
+                Image.DecompressionBombWarning,
+            )
+
+            with Image.open(upload.stream) as image:
+                image.verify()
+
+            upload.stream.seek(0)
+
+            with Image.open(upload.stream) as image:
+                image_format = image.format
+                image_width, image_height = image.size
+    except (
+        Image.DecompressionBombWarning,
+        OSError,
+        UnidentifiedImageError,
+    ):
+        return "Upload a valid PNG, JPEG, or WebP image.", None
+
+    if image_format not in KNOWLEDGE_IMAGE_EXTENSIONS:
+        return "Only PNG, JPEG, and WebP images are supported.", None
+
+    if image_width * image_height > KNOWLEDGE_IMAGE_MAX_PIXELS:
+        return "The image is too large. Choose one below 25 megapixels.", None
+
+    upload_directory = Path(app.static_folder) / "images" / "knowledge" / "uploads"
+    upload_directory.mkdir(parents=True, exist_ok=True)
+
+    filename = (
+        f"article-{article.id}-{token_urlsafe(12)}."
+        f"{KNOWLEDGE_IMAGE_EXTENSIONS[image_format]}"
+    )
+    destination = upload_directory / filename
+
+    upload.stream.seek(0)
+    upload.save(destination)
+
+    image = KnowledgeArticleImage(
+        article_id=article.id,
+        image_path=f"images/knowledge/uploads/{filename}",
+        alt_text=(caption or article.title)[:255],
+        caption=caption or None,
+        sort_order=len(article.images),
+    )
+    db.session.add(image)
+
+    return None, destination
+
+
+@app.context_processor
+def inject_notification_count():
+
+    if not current_user.is_authenticated:
+        return {
+            "csrf_token": get_csrf_token(),
+            "unread_notification_count": 0,
+        }
+
+    unread_notification_count = Notification.query.filter_by(
+        recipient_id=current_user.id,
+        is_read=False,
+    ).count()
+
+    return {
+        "csrf_token": get_csrf_token(),
+        "unread_notification_count": unread_notification_count,
+    }
+
+
 # =========================================================
 # PUBLIC ROUTES
 # =========================================================
@@ -274,8 +913,14 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get(
+            "email",
+            "",
+        ).strip().lower()
+        password = request.form.get(
+            "password",
+            "",
+        )
 
         user = User.query.filter_by(
             email=email
@@ -299,6 +944,7 @@ def login():
                 )
 
             login_user(user)
+            session.permanent = True
 
             if user.is_admin:
 
@@ -336,13 +982,57 @@ def forgot_password():
 
     if request.method == "POST":
 
-        # Placeholder flow only.
-        # Real email/token password reset can be added later.
-        email = request.form["email"]
+        validate_csrf_token()
+
+        email = request.form.get(
+            "email",
+            "",
+        ).strip().lower()
+
+        user = User.query.filter_by(
+            email=email,
+            is_active=True,
+        ).first()
+
+        if user:
+            now = datetime.utcnow()
+            PasswordResetToken.query.filter_by(
+                user_id=user.id,
+                used_at=None,
+            ).update(
+                {"used_at": now},
+                synchronize_session=False,
+            )
+
+            raw_token = token_urlsafe(32)
+            reset_token = PasswordResetToken(
+                token_hash=hash_reset_token(raw_token),
+                expires_at=now + timedelta(
+                    minutes=app.config["RESET_TOKEN_TTL_MINUTES"],
+                ),
+                user_id=user.id,
+            )
+            db.session.add(reset_token)
+            db.session.commit()
+
+            if not send_password_reset_email(user, raw_token):
+                reset_token.used_at = datetime.utcnow()
+                db.session.commit()
+
+                flash(
+                    "Password reset email is not configured yet. "
+                    "Please contact support.",
+                    "danger",
+                )
+
+                return redirect(
+                    url_for("forgot_password")
+                )
 
         flash(
             "If an account with that email exists, "
-            "a password reset link has been sent.",
+            "a password reset link has been sent. "
+            "The link expires in one hour.",
             "success",
         )
 
@@ -352,6 +1042,99 @@ def forgot_password():
 
     return render_template(
         "auth/forgot_password.html"
+    )
+
+
+@app.route(
+    "/reset-password/<token>",
+    methods=["GET", "POST"],
+)
+def reset_password(token):
+
+    reset_token = get_valid_reset_token(token)
+
+    if reset_token is None:
+        flash(
+            "That password reset link is invalid or has expired. "
+            "Request a new one.",
+            "danger",
+        )
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    if request.method == "POST":
+        validate_csrf_token()
+
+        new_password = request.form.get(
+            "new_password",
+            "",
+        )
+        confirm_password = request.form.get(
+            "confirm_password",
+            "",
+        )
+
+        if len(new_password) < 8:
+            flash(
+                "Your new password must be at least 8 characters long.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("reset_password", token=token)
+            )
+
+        if new_password != confirm_password:
+            flash(
+                "New passwords do not match.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("reset_password", token=token)
+            )
+
+        if check_password_hash(
+            reset_token.user.password,
+            new_password,
+        ):
+            flash(
+                "Choose a password different from your current password.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("reset_password", token=token)
+            )
+
+        now = datetime.utcnow()
+        reset_token.user.password = generate_password_hash(new_password)
+        reset_token.used_at = now
+
+        PasswordResetToken.query.filter(
+            PasswordResetToken.user_id == reset_token.user_id,
+            PasswordResetToken.id != reset_token.id,
+            PasswordResetToken.used_at.is_(None),
+        ).update(
+            {"used_at": now},
+            synchronize_session=False,
+        )
+        db.session.commit()
+
+        flash(
+            "Your password has been reset. Please sign in.",
+            "success",
+        )
+
+        return redirect(
+            url_for("login")
+        )
+
+    return render_template(
+        "auth/reset_password.html",
+        token=token,
     )
 
 
@@ -367,9 +1150,35 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        email = request.form["email"]
-        password = request.form["password"]
+        username = request.form.get(
+            "username",
+            "",
+        ).strip()
+        email = request.form.get(
+            "email",
+            "",
+        ).strip().lower()
+        password = request.form.get(
+            "password",
+            "",
+        )
+
+        if (
+            len(username) < 2
+            or len(username) > 100
+            or len(email) > 120
+            or "@" not in email
+            or len(password) < 8
+        ):
+            flash(
+                "Use a valid email, a username between 2 and 100 characters, "
+                "and a password of at least 8 characters.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("register")
+            )
 
         existing_user = User.query.filter_by(
             email=email
@@ -474,6 +1283,7 @@ def create_ticket():
         subject = request.form["subject"].strip()
         description = request.form["description"].strip()
         priority = request.form["priority"]
+        category = request.form.get("category", "").strip()
 
         allowed_priorities = [
             "Low",
@@ -486,6 +1296,17 @@ def create_ticket():
 
             flash(
                 "Invalid ticket priority.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("create_ticket")
+            )
+
+        if category not in TICKET_CATEGORIES:
+
+            flash(
+                "Invalid ticket category.",
                 "danger",
             )
 
@@ -507,6 +1328,7 @@ def create_ticket():
             subject=subject,
             description=description,
             priority=priority,
+            category=category,
             status="Open",
             user_id=current_user.id,
         )
@@ -524,7 +1346,19 @@ def create_ticket():
         )
 
     return render_template(
-        "create_ticket.html"
+        "create_ticket.html",
+        prefill_subject=request.args.get(
+            "subject",
+            "",
+        )[:200],
+        prefill_description=request.args.get(
+            "description",
+            "",
+        )[:5000],
+        prefill_category=request.args.get(
+            "category",
+            "",
+        ),
     )
 
 
@@ -655,6 +1489,24 @@ def reply_to_ticket(ticket_id):
     )
 
     db.session.add(reply)
+
+    active_admins = User.query.filter_by(
+        is_admin=True,
+        is_active=True,
+    ).filter(
+        User.id != current_user.id
+    ).all()
+
+    for admin in active_admins:
+        create_notification(
+            recipient_id=admin.id,
+            ticket_id=ticket.id,
+            message=(
+                f"{current_user.username} replied to ticket "
+                f"HDP-{ticket.ticket_number:04d}."
+            ),
+        )
+
     db.session.commit()
 
     flash(
@@ -766,6 +1618,91 @@ def settings():
         "settings.html"
     )
 
+
+# -------------------------
+# NOTIFICATIONS
+# -------------------------
+
+
+@app.route("/notifications")
+@login_required
+def notifications():
+
+    user_notifications = Notification.query.filter_by(
+        recipient_id=current_user.id,
+    ).order_by(
+        Notification.is_read.asc(),
+        Notification.created_at.desc(),
+    ).all()
+
+    return render_template(
+        "notifications.html",
+        notifications=user_notifications,
+    )
+
+
+@app.route(
+    "/notifications/<int:notification_id>/open",
+    methods=["POST"],
+)
+@login_required
+def open_notification(notification_id):
+
+    validate_csrf_token()
+
+    notification = Notification.query.filter_by(
+        id=notification_id,
+        recipient_id=current_user.id,
+    ).first_or_404()
+
+    if not notification.is_read:
+        notification.is_read = True
+        db.session.commit()
+
+    if current_user.is_admin:
+        return redirect(
+            url_for(
+                "admin_ticket_details",
+                ticket_id=notification.ticket_id,
+            )
+        )
+
+    return redirect(
+        url_for(
+            "ticket_details",
+            ticket_id=notification.ticket_id,
+        )
+    )
+
+
+@app.route(
+    "/notifications/mark-all-read",
+    methods=["POST"],
+)
+@login_required
+def mark_all_notifications_read():
+
+    validate_csrf_token()
+
+    Notification.query.filter_by(
+        recipient_id=current_user.id,
+        is_read=False,
+    ).update(
+        {"is_read": True},
+        synchronize_session=False,
+    )
+
+    db.session.commit()
+
+    flash(
+        "All notifications have been marked as read.",
+        "success",
+    )
+
+    return redirect(
+        url_for("notifications")
+    )
+
 # -------------------------
 # KNOWLEDGE BASE
 # -------------------------
@@ -775,8 +1712,278 @@ def settings():
 @login_required
 def knowledge():
 
+    search = request.args.get(
+        "search",
+        "",
+    ).strip()
+
+    category = request.args.get(
+        "category",
+        "",
+    ).strip()
+
+    articles_query = KnowledgeArticle.query.filter_by(
+        is_published=True,
+    )
+
+    if search:
+        articles_query = articles_query.filter(
+            or_(
+                KnowledgeArticle.title.ilike(
+                    f"%{search}%"
+                ),
+                KnowledgeArticle.content.ilike(
+                    f"%{search}%"
+                ),
+                KnowledgeArticle.category.ilike(
+                    f"%{search}%"
+                ),
+            )
+        )
+
+    if category:
+        articles_query = articles_query.filter_by(
+            category=category,
+        )
+
+    articles = articles_query.order_by(
+        KnowledgeArticle.updated_at.desc(),
+    ).all()
+
+    categories = [
+        row[0]
+        for row in db.session.query(
+            KnowledgeArticle.category
+        ).filter_by(
+            is_published=True,
+        ).distinct().order_by(
+            KnowledgeArticle.category.asc(),
+        ).all()
+    ]
+
     return render_template(
-        "knowledge.html"
+        "knowledge.html",
+        articles=articles,
+        categories=categories,
+        search=search,
+        selected_category=category,
+    )
+
+
+@app.route("/knowledge/<int:article_id>")
+@login_required
+def knowledge_article(article_id):
+
+    article = KnowledgeArticle.query.filter_by(
+        id=article_id,
+        is_published=True,
+    ).first_or_404()
+
+    return render_template(
+        "knowledge_article.html",
+        article=article,
+    )
+
+
+# -------------------------
+# ADMIN KNOWLEDGE BASE
+# -------------------------
+
+
+@app.route("/admin/knowledge")
+@admin_required
+def admin_knowledge():
+
+    articles = KnowledgeArticle.query.order_by(
+        KnowledgeArticle.updated_at.desc(),
+    ).all()
+
+    return render_template(
+        "admin/knowledge.html",
+        articles=articles,
+    )
+
+
+@app.route(
+    "/admin/knowledge/add",
+    methods=["GET", "POST"],
+)
+@admin_required
+def add_knowledge_article():
+
+    if request.method == "POST":
+        validate_csrf_token()
+
+        title = request.form.get(
+            "title",
+            "",
+        ).strip()
+
+        category = request.form.get(
+            "category",
+            "",
+        ).strip()
+
+        content = request.form.get(
+            "content",
+            "",
+        ).strip()
+
+        if not title or not category or not content:
+            flash(
+                "Title, category, and article content are required.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("add_knowledge_article")
+            )
+
+        if len(title) > 200 or len(category) > 100:
+            flash(
+                "The title or category is too long.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("add_knowledge_article")
+            )
+
+        article = KnowledgeArticle(
+            title=title,
+            category=category,
+            content=content,
+            is_published=request.form.get("is_published") == "on",
+            author_id=current_user.id,
+        )
+
+        db.session.add(article)
+        db.session.flush()
+
+        image_error, image_path = add_knowledge_article_image(article)
+
+        if image_error:
+            db.session.rollback()
+
+            flash(
+                image_error,
+                "danger",
+            )
+
+            return redirect(
+                url_for("add_knowledge_article")
+            )
+
+        db.session.commit()
+
+        flash(
+            "Knowledge Base article created successfully.",
+            "success",
+        )
+
+        return redirect(
+            url_for("admin_knowledge")
+        )
+
+    return render_template(
+        "admin/knowledge_form.html",
+        article=None,
+    )
+
+
+@app.route(
+    "/admin/knowledge/<int:article_id>/edit",
+    methods=["GET", "POST"],
+)
+@admin_required
+def edit_knowledge_article(article_id):
+
+    article = KnowledgeArticle.query.get_or_404(
+        article_id
+    )
+
+    if request.method == "POST":
+        validate_csrf_token()
+
+        title = request.form.get(
+            "title",
+            "",
+        ).strip()
+
+        category = request.form.get(
+            "category",
+            "",
+        ).strip()
+
+        content = request.form.get(
+            "content",
+            "",
+        ).strip()
+
+        if not title or not category or not content:
+            flash(
+                "Title, category, and article content are required.",
+                "danger",
+            )
+
+            return redirect(
+                url_for(
+                    "edit_knowledge_article",
+                    article_id=article.id,
+                )
+            )
+
+        if len(title) > 200 or len(category) > 100:
+            flash(
+                "The title or category is too long.",
+                "danger",
+            )
+
+            return redirect(
+                url_for(
+                    "edit_knowledge_article",
+                    article_id=article.id,
+                )
+            )
+
+        article.title = title
+        article.category = category
+        article.content = content
+        article.is_published = request.form.get(
+            "is_published"
+        ) == "on"
+
+        image_error, image_path = add_knowledge_article_image(article)
+
+        if image_error:
+            db.session.rollback()
+
+            flash(
+                image_error,
+                "danger",
+            )
+
+            return redirect(
+                url_for(
+                    "edit_knowledge_article",
+                    article_id=article.id,
+                )
+            )
+
+        db.session.commit()
+
+        flash(
+            "Knowledge Base article updated successfully.",
+            "success",
+        )
+
+        return redirect(
+            url_for("admin_knowledge")
+        )
+
+    return render_template(
+        "admin/knowledge_form.html",
+        article=article,
     )
 
 
@@ -788,8 +1995,131 @@ def knowledge():
 @login_required
 def chat():
 
+    conversations = []
+    active_conversation = None
+
+    if current_user.is_admin:
+        conversations = ChatConversation.query.order_by(
+            ChatConversation.last_message_at.desc(),
+        ).all()
+
+        conversation_id = request.args.get(
+            "conversation",
+            type=int,
+        )
+
+        if conversation_id:
+            active_conversation = ChatConversation.query.get_or_404(
+                conversation_id
+            )
+        elif conversations:
+            active_conversation = conversations[0]
+    else:
+        active_conversation = ChatConversation.query.filter_by(
+            user_id=current_user.id,
+        ).first()
+
+        if active_conversation is None:
+            active_conversation = ChatConversation(
+                user_id=current_user.id,
+            )
+            db.session.add(active_conversation)
+            db.session.commit()
+
+    messages = []
+
+    if active_conversation:
+        messages = ChatMessage.query.filter_by(
+            conversation_id=active_conversation.id,
+        ).order_by(
+            ChatMessage.created_at.asc(),
+        ).all()
+
+        ChatMessage.query.filter(
+            ChatMessage.conversation_id == active_conversation.id,
+            ChatMessage.sender_id != current_user.id,
+            ChatMessage.is_read.is_(False),
+        ).update(
+            {"is_read": True},
+            synchronize_session=False,
+        )
+        db.session.commit()
+
     return render_template(
-        "chat.html"
+        "chat.html",
+        conversations=conversations,
+        active_conversation=active_conversation,
+        messages=messages,
+    )
+
+
+@app.route(
+    "/chat/send",
+    methods=["POST"],
+)
+@login_required
+def send_chat_message():
+
+    validate_csrf_token()
+
+    message = request.form.get(
+        "message",
+        "",
+    ).strip()
+
+    if not message or len(message) > 2000:
+        flash(
+            "Chat messages must contain between 1 and 2,000 characters.",
+            "danger",
+        )
+
+        return redirect(
+            url_for("chat")
+        )
+
+    if current_user.is_admin:
+        conversation_id = request.form.get(
+            "conversation_id",
+            type=int,
+        )
+        conversation = db.session.get(
+            ChatConversation,
+            conversation_id,
+        )
+
+        if conversation is None:
+            abort(404)
+    else:
+        conversation = ChatConversation.query.filter_by(
+            user_id=current_user.id,
+        ).first()
+
+        if conversation is None:
+            conversation = ChatConversation(
+                user_id=current_user.id,
+            )
+            db.session.add(conversation)
+            db.session.flush()
+
+    db.session.add(
+        ChatMessage(
+            message=message,
+            conversation_id=conversation.id,
+            sender_id=current_user.id,
+        )
+    )
+    conversation.last_message_at = datetime.utcnow()
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            "chat",
+            conversation=(
+                conversation.id
+                if current_user.is_admin
+                else None
+            ),
+        )
     )
 
 
@@ -870,6 +2200,11 @@ def admin_tickets():
         "",
     ).strip()
 
+    category_filter = request.args.get(
+        "category",
+        "",
+    ).strip()
+
     # Start with every ticket
     query = Ticket.query.join(User)
 
@@ -904,6 +2239,16 @@ def admin_tickets():
 
         query = query.filter(
             Ticket.priority == priority_filter
+        )
+
+    # ---------------------------------
+    # CATEGORY FILTER
+    # ---------------------------------
+
+    if category_filter in TICKET_CATEGORIES:
+
+        query = query.filter(
+            Ticket.category == category_filter
         )
 
     # ---------------------------------
@@ -959,6 +2304,8 @@ def admin_tickets():
         search=search,
         status_filter=status_filter,
         priority_filter=priority_filter,
+        category_filter=category_filter,
+        ticket_categories=TICKET_CATEGORIES,
     )
 # -------------------------
 # ADMIN TICKET DETAILS
@@ -1025,7 +2372,23 @@ def admin_update_ticket_status(ticket_id):
             )
         )
 
+    previous_status = ticket.status
+
     ticket.status = new_status
+
+    if (
+        new_status == "Resolved"
+        and previous_status != "Resolved"
+        and ticket.user.is_active
+    ):
+        create_notification(
+            recipient_id=ticket.user_id,
+            ticket_id=ticket.id,
+            message=(
+                f"Your ticket HDP-{ticket.ticket_number:04d} "
+                "has been resolved."
+            ),
+        )
 
     db.session.commit()
 
@@ -1083,6 +2446,17 @@ def admin_reply_to_ticket(ticket_id):
     )
 
     db.session.add(reply)
+
+    if ticket.user_id != current_user.id and ticket.user.is_active:
+        create_notification(
+            recipient_id=ticket.user_id,
+            ticket_id=ticket.id,
+            message=(
+                f"Support replied to your ticket "
+                f"HDP-{ticket.ticket_number:04d}."
+            ),
+        )
+
     db.session.commit()
 
     flash(
@@ -1383,9 +2757,42 @@ def logout():
 # DATABASE INITIALIZATION / DEVELOPMENT SERVER
 # =========================================================
 
+def ensure_database_schema():
+
+    db.create_all()
+
+    if db.engine.dialect.name != "sqlite":
+        return
+
+    ticket_columns = db.session.execute(
+        text("PRAGMA table_info(ticket)")
+    ).mappings().all()
+
+    if "category" not in {
+        column["name"]
+        for column in ticket_columns
+    }:
+        db.session.execute(
+            text(
+                "ALTER TABLE ticket "
+                "ADD COLUMN category VARCHAR(50) "
+                "NOT NULL DEFAULT 'Other'"
+            )
+        )
+        db.session.commit()
+
+
+@app.cli.command("init-db")
+def initialize_database():
+
+    ensure_database_schema()
+
+    print("Database tables are ready.")
+
+
 if __name__ == "__main__":
 
     with app.app_context():
-        db.create_all()
+        ensure_database_schema()
 
     app.run(debug=True)

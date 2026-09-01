@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}
+Knowledge Base | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<div class="knowledge-page">
+
+    <section class="knowledge-hero">
+        <span class="knowledge-eyebrow">Self-service support</span>
+
+        <h1>How can we help?</h1>
+
+        <p>
+            Browse quick guides and practical fixes before opening a support ticket.
+        </p>
+
+        <form method="GET" action="{{ url_for('knowledge') }}" class="knowledge-search-form">
+            <label class="sr-only" for="knowledge-search">Search help articles</label>
+
+            <div class="knowledge-search-input">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input
+                    type="search"
+                    id="knowledge-search"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Search WiFi, passwords, devices..."
+                >
+            </div>
+
+            <select name="category" aria-label="Filter articles by category">
+                <option value="">All categories</option>
+
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">
+                Search
+            </button>
+        </form>
+    </section>
+
+    <section class="knowledge-content" aria-labelledby="knowledge-articles-title">
+        <div class="knowledge-content-header">
+            <div>
+                <span class="knowledge-eyebrow">Help articles</span>
+                <h2 id="knowledge-articles-title">Find an answer</h2>
+            </div>
+
+            {% if search or selected_category %}
+                <a href="{{ url_for('knowledge') }}" class="knowledge-clear-filter">
+                    Clear filters
+                </a>
+            {% endif %}
+        </div>
+
+        {% if articles %}
+            <div class="knowledge-grid">
+                {% for article in articles %}
+                    <article class="knowledge-card">
+                        <span class="knowledge-category">{{ article.category }}</span>
+
+                        <h3>{{ article.title }}</h3>
+
+                        <p>
+                            {{ article.content[:170] }}{% if article.content|length > 170 %}…{% endif %}
+                        </p>
+
+                        <a href="{{ url_for('knowledge_article', article_id=article.id) }}">
+                            Read guide
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="knowledge-empty-state">
+                <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                <h3>No matching articles yet</h3>
+                <p>Try a different search, or let our support team help directly.</p>
+                <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
+                    Create a ticket
+                </a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="knowledge-support-cta">
+        <div>
+            <span class="knowledge-eyebrow">Still need help?</span>
+            <h2>Our support team is ready.</h2>
+            <p>Create a ticket with the details and we will take it from there.</p>
+        </div>
+
+        <a href="{{ url_for('create_ticket') }}" class="knowledge-cta-button">
+            Create a ticket
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    </section>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}
+Notifications | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<div class="notifications-page">
+
+    <div class="notifications-header">
+
+        <div>
+            <span class="notifications-eyebrow">
+                Support updates
+            </span>
+
+            <h1>
+                Notifications
+            </h1>
+
+            <p>
+                Keep track of replies and ticket resolutions.
+            </p>
+        </div>
+
+        {% if unread_notification_count %}
+            <form
+                method="POST"
+                action="{{ url_for('mark_all_notifications_read') }}"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <button
+                    type="submit"
+                    class="notifications-mark-read-button"
+                >
+                    <i class="fa-solid fa-check-double"></i>
+                    Mark all as read
+                </button>
+            </form>
+        {% endif %}
+
+    </div>
+
+    {% if notifications %}
+        <div class="notifications-list">
+
+            {% for notification in notifications %}
+                <form
+                    method="POST"
+                    action="{{ url_for('open_notification', notification_id=notification.id) }}"
+                    class="notification-card-form"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token }}"
+                    >
+
+                    <button
+                        type="submit"
+                        class="notification-card {% if not notification.is_read %}is-unread{% endif %}"
+                    >
+                        <span
+                            class="notification-icon"
+                            aria-hidden="true"
+                        >
+                            <i class="fa-solid fa-bell"></i>
+                        </span>
+
+                        <span class="notification-copy">
+                            <span class="notification-message">
+                                {{ notification.message }}
+                            </span>
+
+                            <span class="notification-meta">
+                                Ticket HDP-{{ "%04d"|format(notification.ticket.ticket_number) }}
+                                · {{ notification.created_at.strftime("%d %b %Y, %I:%M %p") }}
+                            </span>
+                        </span>
+
+                        {% if not notification.is_read %}
+                            <span class="notification-unread-indicator">
+                                Unread
+                            </span>
+                        {% endif %}
+                    </button>
+                </form>
+            {% endfor %}
+
+        </div>
+    {% else %}
+        <div class="notifications-empty-state">
+            <div class="notifications-empty-icon">
+                <i class="fa-regular fa-bell"></i>
+            </div>
+
+            <h2>
+                You are all caught up
+            </h2>
+
+            <p>
+                New ticket replies and resolutions will appear here.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

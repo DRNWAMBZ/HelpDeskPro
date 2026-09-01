@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if article %}Edit Article{% else %}New Article{% endif %} | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page knowledge-admin-page">
+    <div class="admin-header">
+        <div>
+            <h1>{% if article %}Edit article{% else %}New article{% endif %}</h1>
+            <p>Keep the wording clear, short, and easy for customers to follow.</p>
+        </div>
+
+        <a href="{{ url_for('admin_knowledge') }}" class="secondary-action-btn">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            All articles
+        </a>
+    </div>
+
+    <div class="admin-card knowledge-form-card">
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="knowledge-admin-form"
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="input-group">
+                <label for="title">Article title</label>
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value="{{ article.title if article else '' }}"
+                    maxlength="200"
+                    placeholder="For example: How to connect to Guest WiFi"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="category">Category</label>
+                <input
+                    type="text"
+                    id="category"
+                    name="category"
+                    value="{{ article.category if article else '' }}"
+                    maxlength="100"
+                    placeholder="For example: Connectivity"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="content">Article content</label>
+                <textarea
+                    id="content"
+                    name="content"
+                    rows="12"
+                    placeholder="Explain the solution step by step."
+                    required
+                >{{ article.content if article else '' }}</textarea>
+            </div>
+
+            <section class="knowledge-image-uploader" aria-labelledby="article-image-heading">
+                <div class="knowledge-image-uploader-heading">
+                    <div>
+                        <h2 id="article-image-heading">Article picture</h2>
+                        <p>Add a locally saved image to make this guide easier to follow.</p>
+                    </div>
+                    <span>Optional</span>
+                </div>
+
+                <div class="knowledge-image-upload-fields">
+                    <div class="input-group">
+                        <label for="article_image">Choose image</label>
+                        <input
+                            type="file"
+                            id="article_image"
+                            name="article_image"
+                            accept="image/png,image/jpeg,image/webp"
+                        >
+                        <small>PNG, JPEG, or WebP — maximum 5 MB.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="image_caption">Caption</label>
+                        <input
+                            type="text"
+                            id="image_caption"
+                            name="image_caption"
+                            maxlength="255"
+                            placeholder="Briefly describe what staff should notice."
+                        >
+                    </div>
+                </div>
+
+                {% if article and article.images %}
+                    <div class="knowledge-uploaded-images">
+                        {% for image in article.images|sort(attribute='sort_order') %}
+                            <figure class="knowledge-uploaded-image">
+                                <img
+                                    src="{{ url_for('static', filename=image.image_path) }}"
+                                    alt="{{ image.alt_text }}"
+                                >
+                                <figcaption>{{ image.caption or 'Article image' }}</figcaption>
+                            </figure>
+                        {% endfor %}
+                    </div>
+                    <p class="knowledge-image-uploader-note">
+                        Choose another image and save changes to add it to the article.
+                    </p>
+                {% endif %}
+            </section>
+
+            <label class="knowledge-publish-control" for="is_published">
+                <input
+                    type="checkbox"
+                    id="is_published"
+                    name="is_published"
+                    {% if article and article.is_published %}checked{% endif %}
+                >
+                <span>
+                    <strong>Publish this article</strong>
+                    <small>Published articles are visible to all logged-in customers.</small>
+                </span>
+            </label>
+
+            <div class="knowledge-form-actions">
+                <button type="submit" class="settings-primary-button">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    {% if article %}Save changes{% else %}Create article{% endif %}
+                </button>
+
+                <a href="{{ url_for('admin_knowledge') }}" class="knowledge-cancel-link">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -24,6 +24,8 @@ Create Ticket
         method="POST"
         class="ticket-form">
 
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
 
         <!-- Subject -->
 
@@ -37,6 +39,7 @@ Create Ticket
                 type="text"
                 id="subject"
                 name="subject"
+                value="{{ prefill_subject }}"
                 placeholder="Briefly describe your issue"
                 required>
 
@@ -56,7 +59,34 @@ Create Ticket
                 name="description"
                 rows="6"
                 placeholder="Describe your issue in detail..."
-                required></textarea>
+                required>{{ prefill_description }}</textarea>
+
+        </div>
+
+
+        <!-- Category -->
+
+        <div class="input-group">
+
+            <label for="category">
+                Category
+            </label>
+
+            <select
+                id="category"
+                name="category"
+                required
+            >
+                <option value="" {% if not prefill_category %}selected{% endif %} disabled>
+                    Select the area you need help with
+                </option>
+
+                <option value="Account Access" {% if prefill_category == 'Account Access' %}selected{% endif %}>Account Access</option>
+                <option value="Hardware" {% if prefill_category == 'Hardware' %}selected{% endif %}>Hardware</option>
+                <option value="Network & WiFi" {% if prefill_category == 'Network & WiFi' %}selected{% endif %}>Network &amp; WiFi</option>
+                <option value="Software" {% if prefill_category == 'Software' %}selected{% endif %}>Software</option>
+                <option value="Other" {% if prefill_category == 'Other' %}selected{% endif %}>Other</option>
+            </select>
 
         </div>
 

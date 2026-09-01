@@ -1,11 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest wifi</title>
-</head>
-<body>
-    <h1>Hi, Welcome to the guest Page</h1>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+Guest WiFi | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<section class="guest-wifi-page">
+    <header class="guest-wifi-hero">
+        <div>
+            <span class="guest-wifi-eyebrow">
+                <i class="fa-solid fa-wifi" aria-hidden="true"></i>
+                Connection help
+            </span>
+            <h1>Connect to Guest WiFi</h1>
+            <p>Use this quick guide to get online safely. Your host or support team can provide the current network name and password.</p>
+        </div>
+
+        <div class="guest-wifi-hero-icon" aria-hidden="true">
+            <i class="fa-solid fa-wifi"></i>
+        </div>
+    </header>
+
+    <div class="guest-wifi-layout">
+        <article class="guest-wifi-card guest-wifi-steps-card">
+            <div class="guest-wifi-card-heading">
+                <span>01</span>
+                <div>
+                    <h2>Join the network</h2>
+                    <p>Most devices connect in under a minute.</p>
+                </div>
+            </div>
+
+            <ol class="guest-wifi-steps">
+                <li><span>1</span><p>Open <strong>Settings</strong> and select <strong>WiFi</strong>.</p></li>
+                <li><span>2</span><p>Choose the guest network name provided by your host or support team.</p></li>
+                <li><span>3</span><p>Enter the current guest password exactly as supplied, then wait for the connection confirmation.</p></li>
+                <li><span>4</span><p>Open a browser and visit any page to complete a sign-in screen, if one appears.</p></li>
+            </ol>
+        </article>
+
+        <aside class="guest-wifi-card guest-wifi-security-card">
+            <div class="guest-wifi-card-heading">
+                <span>02</span>
+                <div>
+                    <h2>Stay secure</h2>
+                    <p>A few simple habits keep shared WiFi safer.</p>
+                </div>
+            </div>
+
+            <ul class="guest-wifi-security-list">
+                <li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>Do not share the guest password publicly.</li>
+                <li><i class="fa-solid fa-lock" aria-hidden="true"></i>Use secure websites that show <strong>https://</strong>.</li>
+                <li><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Disconnect when you have finished on a shared device.</li>
+            </ul>
+        </aside>
+    </div>
+
+    <section class="guest-wifi-troubleshooting" aria-labelledby="wifi-troubleshooting-title">
+        <div class="guest-wifi-section-heading">
+            <span class="guest-wifi-eyebrow">Troubleshooting</span>
+            <h2 id="wifi-troubleshooting-title">Still having trouble?</h2>
+        </div>
+
+        <div class="guest-wifi-help-grid">
+            <article><i class="fa-solid fa-signal" aria-hidden="true"></i><h3>Network not visible</h3><p>Move closer to the router, turn WiFi off and on, then check the network list again.</p></article>
+            <article><i class="fa-solid fa-key" aria-hidden="true"></i><h3>Password rejected</h3><p>Forget the network on your device and reconnect with the latest password from your host.</p></article>
+            <article><i class="fa-solid fa-globe" aria-hidden="true"></i><h3>Connected, but no internet</h3><p>Open a browser to check for a sign-in screen, then restart WiFi if the issue continues.</p></article>
+        </div>
+    </section>
+
+    <section class="guest-wifi-support-callout">
+        <div>
+            <span class="guest-wifi-eyebrow">Need a hand?</span>
+            <h2>Send the support team the details.</h2>
+            <p>Tell us the device you are using and the step where the connection stopped.</p>
+        </div>
+        <a href="{{ url_for('create_ticket', subject='Guest WiFi connection help', category='Network & WiFi') }}" class="guest-wifi-support-button">
+            Create WiFi ticket
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    </section>
+</section>
+
+{% endblock %}

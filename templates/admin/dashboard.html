@@ -105,6 +105,8 @@ Admin Dashboard
                             {{ ticket.priority }}
                         </span>
 
+                        <span>{{ ticket.category }}</span>
+
                         <span class="status-badge status-{{ ticket.status|lower|replace(' ', '-') }}">
                             {{ ticket.status }}
                         </span>

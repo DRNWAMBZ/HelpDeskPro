@@ -35,6 +35,8 @@ Edit User
             class="ticket-form"
         >
 
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
             <div class="input-group">
 
                 <label for="username">

@@ -139,6 +139,32 @@ Ticket Management
         </div>
 
 
+        <!-- CATEGORY -->
+
+        <div class="admin-ticket-filter">
+
+            <label for="category">
+                Category
+            </label>
+
+            <select
+                name="category"
+                id="category"
+            >
+                <option value="">All Categories</option>
+                {% for category in ticket_categories %}
+                    <option
+                        value="{{ category }}"
+                        {% if category_filter == category %}selected{% endif %}
+                    >
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+
+        </div>
+
+
         <!-- APPLY -->
 
         <button
@@ -152,7 +178,7 @@ Ticket Management
 
         <!-- CLEAR -->
 
-        {% if search or status_filter or priority_filter %}
+        {% if search or status_filter or priority_filter or category_filter %}
 
             <a
                 href="{{ url_for('admin_tickets') }}"
@@ -204,6 +230,8 @@ Ticket Management
                         <span class="priority-badge priority-{{ ticket.priority|lower }}">
                             {{ ticket.priority }}
                         </span>
+
+                        <span>{{ ticket.category }}</span>
 
                         <span>
                             {{ ticket.created_at.strftime("%d %b %Y") }}
@@ -269,6 +297,8 @@ Ticket Management
                             {{ ticket.priority }}
                         </span>
 
+                        <span>{{ ticket.category }}</span>
+
                         <span>
                             {{ ticket.created_at.strftime("%d %b %Y") }}
                         </span>
@@ -332,6 +362,8 @@ Ticket Management
                         <span class="priority-badge priority-{{ ticket.priority|lower }}">
                             {{ ticket.priority }}
                         </span>
+
+                        <span>{{ ticket.category }}</span>
 
                         <span>
                             {{ ticket.created_at.strftime("%d %b %Y") }}

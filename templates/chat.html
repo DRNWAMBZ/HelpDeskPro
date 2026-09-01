@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}
+Live Chat | HelpDesk Pro
+{% endblock %}
+
+{% block content %}
+
+<section class="chat-page" data-chat-page>
+    <header class="chat-page-header">
+        <div>
+            <span class="chat-eyebrow">
+                <i class="fa-solid fa-circle" aria-hidden="true"></i>
+                Support is online
+            </span>
+            <h1>Live Chat</h1>
+            <p>
+                {% if current_user.is_admin %}
+                    Reply to staff questions from one shared support inbox.
+                {% else %}
+                    Send a quick question to the support team. Your conversation is private.
+                {% endif %}
+            </p>
+        </div>
+
+        <span class="chat-refresh-status">
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            Refreshes automatically
+        </span>
+    </header>
+
+    <div class="chat-workspace {% if current_user.is_admin %}chat-workspace-admin{% endif %}">
+        {% if current_user.is_admin %}
+            <aside class="chat-inbox" aria-label="Support conversations">
+                <div class="chat-inbox-header">
+                    <h2>Inbox</h2>
+                    <span>{{ conversations|length }}</span>
+                </div>
+
+                {% if conversations %}
+                    <div class="chat-conversation-list">
+                        {% for conversation in conversations %}
+                            <a
+                                href="{{ url_for('chat', conversation=conversation.id) }}"
+                                class="chat-conversation-link {% if active_conversation and active_conversation.id == conversation.id %}is-active{% endif %}"
+                            >
+                                <span class="chat-avatar" aria-hidden="true">
+                                    {{ conversation.user.username[0]|upper }}
+                                </span>
+                                <span class="chat-conversation-copy">
+                                    <strong>{{ conversation.user.username }}</strong>
+                                    <small>Last activity {{ conversation.last_message_at.strftime('%d %b, %H:%M') }}</small>
+                                </span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="chat-inbox-empty">
+                        <i class="fa-regular fa-comments" aria-hidden="true"></i>
+                        <p>New staff chats will appear here.</p>
+                    </div>
+                {% endif %}
+            </aside>
+        {% endif %}
+
+        <div class="chat-panel">
+            {% if active_conversation %}
+                <div class="chat-panel-header">
+                    <div>
+                        <span class="chat-panel-label">
+                            {% if current_user.is_admin %}
+                                Chatting with
+                            {% else %}
+                                Your private conversation with
+                            {% endif %}
+                        </span>
+                        <h2>
+                            {% if current_user.is_admin %}
+                                {{ active_conversation.user.username }}
+                            {% else %}
+                                DRN TECH Support
+                            {% endif %}
+                        </h2>
+                    </div>
+                    <span class="chat-online-indicator">
+                        <span aria-hidden="true"></span>
+                        Active
+                    </span>
+                </div>
+
+                <div class="chat-message-list" aria-live="polite">
+                    {% if messages %}
+                        {% for chat_message in messages %}
+                            <article class="chat-message {% if chat_message.sender_id == current_user.id %}chat-message-own{% else %}chat-message-other{% endif %}">
+                                <div class="chat-message-bubble">
+                                    <p>{{ chat_message.message }}</p>
+                                    <time datetime="{{ chat_message.created_at.isoformat() }}">
+                                        {{ chat_message.created_at.strftime('%H:%M') }}
+                                    </time>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="chat-empty-thread">
+                            <i class="fa-regular fa-comment-dots" aria-hidden="true"></i>
+                            <h3>Start the conversation</h3>
+                            <p>
+                                {% if current_user.is_admin %}
+                                    Send a helpful reply to this staff member.
+                                {% else %}
+                                    Tell the support team what you need help with.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <form method="POST" action="{{ url_for('send_chat_message') }}" class="chat-composer">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    {% if current_user.is_admin %}
+                        <input type="hidden" name="conversation_id" value="{{ active_conversation.id }}">
+                    {% endif %}
+
+                    <label class="sr-only" for="message">Message</label>
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="2"
+                        maxlength="2000"
+                        placeholder="Write a message…"
+                        required
+                    ></textarea>
+                    <button type="submit" class="chat-send-button">
+                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                        Send
+                    </button>
+                </form>
+            {% else %}
+                <div class="chat-no-conversation">
+                    <i class="fa-regular fa-comments" aria-hidden="true"></i>
+                    <h2>No active conversations</h2>
+                    <p>When a staff member starts a chat, it will appear in this inbox.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
+{% endblock %}

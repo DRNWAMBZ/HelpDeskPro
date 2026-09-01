@@ -8,6 +8,11 @@ venv/
 # Database
 instance/
 
+# Local environment secrets
+.env
+.env.*
+!.env.example
+
 # IDE files
 .idea/
 .vscode/

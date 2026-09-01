@@ -46,6 +46,15 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
 
 
             <div class="ticket-meta-item">
+
+                <span>Category</span>
+
+                <strong>{{ ticket.category }}</strong>
+
+            </div>
+
+
+            <div class="ticket-meta-item">
                 <span>Email</span>
                 <strong>{{ ticket.user.email }}</strong>
             </div>
@@ -191,6 +200,8 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
         class="ticket-reply-form"
     >
 
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
         <label for="message">
             Reply to User
         </label>
@@ -247,6 +258,8 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
         ) }}"
         class="admin-status-form"
     >
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <label for="status">
             Change Status

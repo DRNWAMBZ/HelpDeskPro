@@ -22,93 +22,174 @@
 
 <aside class="sidebar">
 
-    <div class="logo">
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-mark">
+            <i class="fa-solid fa-headset" aria-hidden="true"></i>
+        </div>
 
-        <h2>DRN TECH</h2>
-
+        <div class="sidebar-brand-copy">
+            <strong>DRN TECH</strong>
+            <span>HelpDesk Pro</span>
+        </div>
     </div>
 
 
-    <nav>
+    <nav class="sidebar-nav" aria-label="Main navigation">
 
         {% if current_user.is_authenticated and current_user.is_admin %}
 
-            <!-- ========================= -->
-            <!-- ADMIN NAVIGATION -->
-            <!-- ========================= -->
+            <span class="sidebar-section-label">Workspace</span>
 
-            <a href="{{ url_for('admin_dashboard') }}">
-                🏠 Dashboard
+            <a
+                href="{{ url_for('admin_dashboard') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'admin_dashboard' %}is-active{% endif %}"
+                {% if request.endpoint == 'admin_dashboard' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i></span>
+                <span>Dashboard</span>
             </a>
 
-            <a href="{{ url_for('admin_users') }}">
-                👥 Users
+            <a
+                href="{{ url_for('admin_users') }}"
+                class="sidebar-nav-link {% if request.endpoint in ['admin_users', 'add_user', 'edit_user'] %}is-active{% endif %}"
+                {% if request.endpoint in ['admin_users', 'add_user', 'edit_user'] %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                <span>Users</span>
             </a>
 
-            <a href="{{ url_for('admin_tickets') }}">
-                🎫 Tickets
+            <a
+                href="{{ url_for('admin_tickets') }}"
+                class="sidebar-nav-link {% if request.endpoint in ['admin_tickets', 'admin_ticket_details', 'admin_update_ticket_status', 'admin_reply_to_ticket'] %}is-active{% endif %}"
+                {% if request.endpoint in ['admin_tickets', 'admin_ticket_details', 'admin_update_ticket_status', 'admin_reply_to_ticket'] %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
+                <span>Tickets</span>
             </a>
 
-            <a href="{{ url_for('chat') }}">
-                💬 Live Chat
+            <span class="sidebar-section-label">Support tools</span>
+
+            <a
+                href="{{ url_for('chat') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'chat' %}is-active{% endif %}"
+                {% if request.endpoint == 'chat' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></span>
+                <span>Live Chat</span>
             </a>
 
-            <a href="{{ url_for('knowledge') }}">
-                📚 Knowledge Base
+            <a
+                href="{{ url_for('admin_knowledge') }}"
+                class="sidebar-nav-link {% if request.endpoint in ['admin_knowledge', 'add_knowledge_article', 'edit_knowledge_article'] %}is-active{% endif %}"
+                {% if request.endpoint in ['admin_knowledge', 'add_knowledge_article', 'edit_knowledge_article'] %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                <span>Knowledge Base</span>
             </a>
 
-            <a href="{{ url_for('guest') }}">
-                📶 Guest WiFi
+            <a
+                href="{{ url_for('guest') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'guest' %}is-active{% endif %}"
+                {% if request.endpoint == 'guest' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-wifi" aria-hidden="true"></i></span>
+                <span>Guest WiFi</span>
             </a>
-
-            <a href="{{ url_for('settings') }}">
-                ⚙ Settings
-            </a>
-
 
         {% else %}
 
-            <!-- ========================= -->
-            <!-- NORMAL USER NAVIGATION -->
-            <!-- ========================= -->
+            <span class="sidebar-section-label">Workspace</span>
 
-            <a href="{{ url_for('dashboard') }}">
-                🏠 Dashboard
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'dashboard' %}is-active{% endif %}"
+                {% if request.endpoint == 'dashboard' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i></span>
+                <span>Dashboard</span>
             </a>
 
-            <a href="{{ url_for('tickets') }}">
-                🎫 My Tickets
+            <a
+                href="{{ url_for('tickets') }}"
+                class="sidebar-nav-link {% if request.endpoint in ['tickets', 'ticket_details', 'reply_to_ticket'] %}is-active{% endif %}"
+                {% if request.endpoint in ['tickets', 'ticket_details', 'reply_to_ticket'] %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
+                <span>My Tickets</span>
             </a>
 
-            <a href="{{ url_for('create_ticket') }}">
-                ➕ Create Ticket
+            <a
+                href="{{ url_for('create_ticket') }}"
+                class="sidebar-nav-link sidebar-create-ticket {% if request.endpoint == 'create_ticket' %}is-active{% endif %}"
+                {% if request.endpoint == 'create_ticket' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+                <span>Create Ticket</span>
             </a>
 
-            <a href="{{ url_for('chat') }}">
-                💬 Live Chat
+            <span class="sidebar-section-label">Support tools</span>
+
+            <a
+                href="{{ url_for('chat') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'chat' %}is-active{% endif %}"
+                {% if request.endpoint == 'chat' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></span>
+                <span>Live Chat</span>
             </a>
 
-            <a href="{{ url_for('knowledge') }}">
-                📚 Knowledge Base
+            <a
+                href="{{ url_for('knowledge') }}"
+                class="sidebar-nav-link {% if request.endpoint in ['knowledge', 'knowledge_article'] %}is-active{% endif %}"
+                {% if request.endpoint in ['knowledge', 'knowledge_article'] %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                <span>Knowledge Base</span>
             </a>
 
-            <a href="{{ url_for('guest') }}">
-                📶 Guest WiFi
-            </a>
-
-            <a href="{{ url_for('settings') }}">
-                ⚙ Settings
+            <a
+                href="{{ url_for('guest') }}"
+                class="sidebar-nav-link {% if request.endpoint == 'guest' %}is-active{% endif %}"
+                {% if request.endpoint == 'guest' %}aria-current="page"{% endif %}
+            >
+                <span class="sidebar-nav-icon"><i class="fa-solid fa-wifi" aria-hidden="true"></i></span>
+                <span>Guest WiFi</span>
             </a>
 
         {% endif %}
 
 
-        <!-- ========================= -->
-        <!-- LOGOUT -->
-        <!-- ========================= -->
+        <span class="sidebar-section-label">Account</span>
 
-        <a href="{{ url_for('logout') }}">
-            🚪 Logout
+        <a
+            href="{{ url_for('notifications') }}"
+            class="sidebar-nav-link sidebar-notification-link {% if request.endpoint in ['notifications', 'open_notification', 'mark_all_notifications_read'] %}is-active{% endif %}"
+            {% if request.endpoint in ['notifications', 'open_notification', 'mark_all_notifications_read'] %}aria-current="page"{% endif %}
+        >
+            <span class="sidebar-nav-icon"><i class="fa-solid fa-bell" aria-hidden="true"></i></span>
+            <span>Notifications</span>
+            {% if unread_notification_count %}
+                <span
+                    class="notification-badge"
+                    aria-label="{{ unread_notification_count }} unread notifications"
+                >
+                    {{ unread_notification_count }}
+                </span>
+            {% endif %}
+        </a>
+
+        <a
+            href="{{ url_for('settings') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'settings' %}is-active{% endif %}"
+            {% if request.endpoint == 'settings' %}aria-current="page"{% endif %}
+        >
+            <span class="sidebar-nav-icon"><i class="fa-solid fa-gear" aria-hidden="true"></i></span>
+            <span>Settings</span>
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="sidebar-nav-link sidebar-logout">
+            <span class="sidebar-nav-icon"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i></span>
+            <span>Logout</span>
         </a>
 
     </nav>

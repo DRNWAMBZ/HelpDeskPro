@@ -294,6 +294,8 @@ Settings
                             class="settings-password-form"
                         >
 
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
 
                             <div class="settings-form-group">
 
@@ -301,14 +303,29 @@ Settings
                                     Current Password
                                 </label>
 
-                                <input
-                                    type="password"
-                                    id="current_password"
-                                    name="current_password"
-                                    placeholder="Enter your current password"
-                                    autocomplete="current-password"
-                                    required
-                                >
+                                <div class="settings-password-field">
+
+                                    <input
+                                        type="password"
+                                        id="current_password"
+                                        name="current_password"
+                                        placeholder="Enter your current password"
+                                        autocomplete="current-password"
+                                        required
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="settings-password-toggle"
+                                        aria-controls="current_password"
+                                        aria-label="Show current password"
+                                        aria-pressed="false"
+                                        data-password-label="current password"
+                                    >
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
+
+                                </div>
 
                             </div>
 
@@ -320,15 +337,30 @@ Settings
                                     New Password
                                 </label>
 
-                                <input
-                                    type="password"
-                                    id="new_password"
-                                    name="new_password"
-                                    placeholder="Minimum 8 characters"
-                                    minlength="8"
-                                    autocomplete="new-password"
-                                    required
-                                >
+                                <div class="settings-password-field">
+
+                                    <input
+                                        type="password"
+                                        id="new_password"
+                                        name="new_password"
+                                        placeholder="Minimum 8 characters"
+                                        minlength="8"
+                                        autocomplete="new-password"
+                                        required
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="settings-password-toggle"
+                                        aria-controls="new_password"
+                                        aria-label="Show new password"
+                                        aria-pressed="false"
+                                        data-password-label="new password"
+                                    >
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
+
+                                </div>
 
                             </div>
 
@@ -340,15 +372,30 @@ Settings
                                     Confirm New Password
                                 </label>
 
-                                <input
-                                    type="password"
-                                    id="confirm_password"
-                                    name="confirm_password"
-                                    placeholder="Enter the new password again"
-                                    minlength="8"
-                                    autocomplete="new-password"
-                                    required
-                                >
+                                <div class="settings-password-field">
+
+                                    <input
+                                        type="password"
+                                        id="confirm_password"
+                                        name="confirm_password"
+                                        placeholder="Enter the new password again"
+                                        minlength="8"
+                                        autocomplete="new-password"
+                                        required
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="settings-password-toggle"
+                                        aria-controls="confirm_password"
+                                        aria-label="Show confirm new password"
+                                        aria-pressed="false"
+                                        data-password-label="confirm new password"
+                                    >
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
+
+                                </div>
 
                             </div>
 
@@ -452,6 +499,11 @@ Settings
     </div>
 
 </div>
+
+<script
+    src="{{ url_for('static', filename='js/settings.js') }}"
+    defer
+></script>
 
 
 {% endblock %}
