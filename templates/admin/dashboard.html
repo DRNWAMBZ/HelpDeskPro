@@ -67,6 +67,98 @@ Admin Dashboard
 
     </div>
 
+    <section class="admin-report-grid" aria-label="Support reports">
+
+        <div class="admin-report-card admin-report-card-alert">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-clock"></i></span>
+                <div>
+                    <h2>Due-date watch</h2>
+                    <p>Tickets that need attention.</p>
+                </div>
+            </div>
+            <div class="admin-report-metrics">
+                <div>
+                    <strong>{{ overdue_tickets }}</strong>
+                    <span>Overdue</span>
+                </div>
+                <div>
+                    <strong>{{ due_soon_tickets }}</strong>
+                    <span>Due within 24 hours</span>
+                </div>
+                <div>
+                    <strong>{{ critical_open_tickets }}</strong>
+                    <span>Critical and unresolved</span>
+                </div>
+            </div>
+            <a href="{{ url_for('admin_tickets') }}" class="admin-report-link">
+                Review ticket queue <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="admin-report-card">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <div>
+                    <h2>Support activity</h2>
+                    <p>New requests received over the last seven days.</p>
+                </div>
+            </div>
+            <div class="admin-report-feature-metric">
+                <strong>{{ tickets_created_this_week }}</strong>
+                <span>new ticket{{ "s" if tickets_created_this_week != 1 else "" }} this week</span>
+            </div>
+            <p class="admin-report-note">Use ticket status and due dates to keep the queue moving.</p>
+        </div>
+
+        <div class="admin-report-card">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-star"></i></span>
+                <div>
+                    <h2>Live chat satisfaction</h2>
+                    <p>Ratings submitted after completed chats.</p>
+                </div>
+            </div>
+            {% if satisfaction_count %}
+                <div class="admin-report-feature-metric">
+                    <strong>{{ "%.1f"|format(average_satisfaction) }}<small>/5</small></strong>
+                    <span>from {{ satisfaction_count }} rating{{ "s" if satisfaction_count != 1 else "" }}</span>
+                </div>
+            {% else %}
+                <div class="admin-report-empty">
+                    <i class="fa-regular fa-star" aria-hidden="true"></i>
+                    No chat ratings yet.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="admin-report-card admin-category-report">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-layer-group"></i></span>
+                <div>
+                    <h2>Tickets by category</h2>
+                    <p>Where staff need the most support.</p>
+                </div>
+            </div>
+            {% if category_breakdown %}
+                <ul class="admin-category-list">
+                    {% for category, count in category_breakdown %}
+                        <li>
+                            <span>{{ category }}</span>
+                            <strong>{{ count }}</strong>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="admin-report-empty">
+                    <i class="fa-solid fa-ticket" aria-hidden="true"></i>
+                    No ticket data yet.
+                </div>
+            {% endif %}
+        </div>
+
+    </section>
+
     <div class="admin-section">
 
         <div class="admin-section-header">

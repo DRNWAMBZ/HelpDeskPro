@@ -123,6 +123,171 @@
 
 
 /* =========================================================
+   REPORTING SNAPSHOT
+========================================================= */
+
+.admin-report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-report-card {
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, 0.08);
+    padding: 23px;
+}
+
+.admin-report-card-alert {
+    border-color: #fde68a;
+}
+
+.admin-report-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.admin-report-icon {
+    align-items: center;
+    background: #eef6ff;
+    border-radius: 11px;
+    color: #0F4C81;
+    display: inline-flex;
+    font-size: 17px;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.admin-report-card-alert .admin-report-icon {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.admin-report-card h2 {
+    color: #0F4C81;
+    font-size: 17px;
+    margin: 0 0 3px;
+}
+
+.admin-report-card p {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 0;
+}
+
+.admin-report-metrics {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 18px;
+}
+
+.admin-report-metrics div {
+    background: #f8fbff;
+    border-radius: 10px;
+    padding: 13px 10px;
+}
+
+.admin-report-metrics strong,
+.admin-report-feature-metric strong {
+    color: #0F4C81;
+    display: block;
+    font-size: 25px;
+    line-height: 1.1;
+}
+
+.admin-report-metrics span,
+.admin-report-feature-metric span {
+    color: #6b7280;
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.admin-report-link {
+    color: #0F4C81;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-report-link:hover {
+    color: #1767A8;
+}
+
+.admin-report-feature-metric {
+    margin: 6px 0 17px;
+}
+
+.admin-report-feature-metric strong {
+    font-size: 38px;
+}
+
+.admin-report-feature-metric small {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.admin-report-note {
+    border-top: 1px solid #edf2f7;
+    padding-top: 15px;
+}
+
+.admin-report-empty {
+    align-items: center;
+    background: #f8fbff;
+    border-radius: 10px;
+    color: #6b7280;
+    display: flex;
+    font-size: 13px;
+    gap: 9px;
+    min-height: 69px;
+    padding: 12px;
+}
+
+.admin-report-empty i {
+    color: #0F4C81;
+}
+
+.admin-category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-category-list li {
+    align-items: center;
+    border-top: 1px solid #edf2f7;
+    color: #4b5563;
+    display: flex;
+    font-size: 13px;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.admin-category-list li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.admin-category-list strong {
+    background: #eef6ff;
+    border-radius: 999px;
+    color: #0F4C81;
+    font-size: 12px;
+    min-width: 26px;
+    padding: 4px 8px;
+    text-align: center;
+}
+
+
+/* =========================================================
    RECENT TICKETS SECTION
 ========================================================= */
 
@@ -380,6 +545,14 @@
     .admin-section-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .admin-report-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-report-metrics {
+        grid-template-columns: 1fr;
     }
 
 }

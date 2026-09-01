@@ -3,6 +3,7 @@
 import os
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -185,6 +186,36 @@ class HelpDeskRegressionTests(unittest.TestCase):
             self.assertEqual(ticket.status, "In Progress")
             self.assertEqual(TicketReply.query.count(), 1)
             self.assertEqual(Notification.query.count(), 1)
+
+    def test_admin_dashboard_shows_reporting_snapshot(self):
+        with app.app_context():
+            overdue_ticket = Ticket(
+                ticket_number=1,
+                subject="Overdue router replacement",
+                description="The replacement router has not arrived.",
+                priority="Critical",
+                category="Network & WiFi",
+                status="Open",
+                due_at=datetime.utcnow() - timedelta(hours=1),
+                user_id=self.user_id,
+            )
+            db.session.add(overdue_ticket)
+            db.session.add(ChatSatisfactionRating(
+                user_id=self.user_id,
+                admin_id=self.admin_id,
+                rating=5,
+            ))
+            db.session.commit()
+
+        admin_client = app.test_client()
+        self.sign_in(admin_client, "admin-one@example.test")
+        response = admin_client.get("/admin")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Due-date watch", response.data)
+        self.assertIn(b"Overdue", response.data)
+        self.assertIn(b"Live chat satisfaction", response.data)
+        self.assertIn(b"Network &amp; WiFi", response.data)
 
     def test_chat_claim_feedback_and_close(self):
         user_client = app.test_client()

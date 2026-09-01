@@ -2833,7 +2833,8 @@ def guest():
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-
+    now = datetime.utcnow()
+    due_soon_cutoff = now + timedelta(hours=24)
     total_tickets = Ticket.query.count()
 
     open_tickets = Ticket.query.filter_by(
@@ -2848,6 +2849,41 @@ def admin_dashboard():
         status="Resolved"
     ).count()
 
+    overdue_tickets = Ticket.query.filter(
+        Ticket.status != "Resolved",
+        Ticket.due_at.isnot(None),
+        Ticket.due_at < now,
+    ).count()
+
+    due_soon_tickets = Ticket.query.filter(
+        Ticket.status != "Resolved",
+        Ticket.due_at.isnot(None),
+        Ticket.due_at >= now,
+        Ticket.due_at <= due_soon_cutoff,
+    ).count()
+
+    critical_open_tickets = Ticket.query.filter(
+        Ticket.priority == "Critical",
+        Ticket.status != "Resolved",
+    ).count()
+
+    tickets_created_this_week = Ticket.query.filter(
+        Ticket.created_at >= now - timedelta(days=7),
+    ).count()
+
+    category_breakdown = db.session.query(
+        Ticket.category,
+        func.count(Ticket.id),
+    ).group_by(Ticket.category).order_by(
+        func.count(Ticket.id).desc(),
+        Ticket.category.asc(),
+    ).all()
+
+    satisfaction_count = ChatSatisfactionRating.query.count()
+    average_satisfaction = db.session.query(
+        func.avg(ChatSatisfactionRating.rating),
+    ).scalar()
+
     recent_tickets = Ticket.query.order_by(
         Ticket.created_at.desc()
     ).limit(10).all()
@@ -2858,6 +2894,13 @@ def admin_dashboard():
         open_tickets=open_tickets,
         in_progress_tickets=in_progress_tickets,
         resolved_tickets=resolved_tickets,
+        overdue_tickets=overdue_tickets,
+        due_soon_tickets=due_soon_tickets,
+        critical_open_tickets=critical_open_tickets,
+        tickets_created_this_week=tickets_created_this_week,
+        category_breakdown=category_breakdown,
+        satisfaction_count=satisfaction_count,
+        average_satisfaction=average_satisfaction,
         recent_tickets=recent_tickets,
     )
 
