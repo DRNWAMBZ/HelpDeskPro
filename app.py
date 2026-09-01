@@ -77,7 +77,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["SESSION_COOKIE_SECURE"] = app_environment == "production"
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.environ.get(
+        "SESSION_COOKIE_SECURE",
+        str(app_environment == "production"),
+    ).lower() == "true"
+)
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
 app.config["PREFERRED_URL_SCHEME"] = (
     "https"
