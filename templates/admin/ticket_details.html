@@ -93,7 +93,7 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
                 <span>Created</span>
 
                 <strong>
-                    {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
+                    {{ ticket.created_at|local_datetime('%d %b %Y, %H:%M') }}
                 </strong>
 
             </div>
@@ -167,7 +167,7 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
                         </strong>
 
                         <span>
-                            {{ reply.created_at.strftime('%d %b %Y, %H:%M') }}
+                            {{ reply.created_at|local_datetime('%d %b %Y, %H:%M') }}
                         </span>
 
                     </div>
@@ -223,6 +223,36 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
 
     </form>
 
+    <form
+        method="POST"
+        action="{{ url_for('admin_ticket_progress_update', ticket_id=ticket.id) }}"
+        class="admin-status-form"
+    >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="update_type">General Progress Update</label>
+        <div class="admin-status-controls">
+            <select name="update_type" id="update_type" required>
+                <option value="">Choose an update</option>
+                <option value="investigating">We are investigating</option>
+                <option value="work_in_progress">Work is in progress</option>
+                <option value="awaiting_information">We need more information</option>
+                <option value="escalated">This has been escalated</option>
+            </select>
+            <button type="submit" class="admin-status-btn">
+                <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+                Send Update
+            </button>
+        </div>
+        <label for="additional_note">Optional note</label>
+        <textarea
+            id="additional_note"
+            name="additional_note"
+            maxlength="1000"
+            rows="2"
+            placeholder="Add a short, helpful detail for the user..."
+        ></textarea>
+    </form>
+
 </div>
         <!-- =====================================================
      ADMIN TICKET MANAGEMENT
@@ -248,7 +278,6 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
         </span>
 
     </div>
-
 
     <form
         method="POST"

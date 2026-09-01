@@ -6,7 +6,13 @@ Live Chat | HelpDesk Pro
 
 {% block content %}
 
-<section class="chat-page" data-chat-page>
+<section
+    class="chat-page"
+    data-chat-page
+    {% if current_user.is_admin and active_conversation %}
+        data-chat-availability-url="{{ url_for('chat_conversation_availability', conversation_id=active_conversation.id) }}"
+    {% endif %}
+>
     <header class="chat-page-header">
         <div>
             <span class="chat-eyebrow">
@@ -25,7 +31,7 @@ Live Chat | HelpDesk Pro
 
         <span class="chat-refresh-status">
             <i class="fa-solid fa-rotate" aria-hidden="true"></i>
-            Refreshes every 6 seconds
+            Refreshes every 5 seconds
         </span>
     </header>
 
@@ -49,8 +55,12 @@ Live Chat | HelpDesk Pro
                                 </span>
                                 <span class="chat-conversation-copy">
                                     <strong>{{ conversation.user.username }}</strong>
-                                    <small>Last activity {{ conversation.last_message_at.strftime('%d %b, %H:%M') }}</small>
-                                    {% if conversation.assigned_admin_id %}
+                                    <small>Last activity {{ conversation.last_message_at|local_datetime('%d %b, %H:%M') }}</small>
+                                    {% if unread_message_counts.get(conversation.id) %}
+                                        <small class="chat-claim-state chat-unread-state">
+                                            New{% if unread_message_counts[conversation.id] > 1 %} · {{ unread_message_counts[conversation.id] }} messages{% endif %}
+                                        </small>
+                                    {% elif conversation.assigned_admin_id %}
                                         <small class="chat-claim-state is-claimed">Being attended to</small>
                                     {% else %}
                                         <small class="chat-claim-state">Waiting for an admin</small>
@@ -94,10 +104,22 @@ Live Chat | HelpDesk Pro
                                     <span aria-hidden="true"></span>
                                     You are attending
                                 </span>
-                                <form method="POST" action="{{ url_for('release_chat_conversation', conversation_id=active_conversation.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                    <button type="submit" class="chat-release-button">Release chat</button>
-                                </form>
+                                {% if active_conversation.resolution_requested_at %}
+                                    <span class="chat-assignment-note">Awaiting staff feedback</span>
+                                    <form method="POST" action="{{ url_for('close_chat_conversation', conversation_id=active_conversation.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="chat-release-button">Close &amp; delete</button>
+                                    </form>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('request_chat_feedback', conversation_id=active_conversation.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="chat-claim-button">Mark resolved</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('release_chat_conversation', conversation_id=active_conversation.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="chat-release-button">Release chat</button>
+                                    </form>
+                                {% endif %}
                             {% elif active_conversation.assigned_admin_id %}
                                 <span class="chat-assignment-note">Another admin is attending</span>
                             {% else %}
@@ -126,7 +148,7 @@ Live Chat | HelpDesk Pro
                                 <div class="chat-message-bubble">
                                     <p>{{ chat_message.message }}</p>
                                     <time datetime="{{ chat_message.created_at.isoformat() }}">
-                                        {{ chat_message.created_at.strftime('%H:%M') }}
+                                        {{ chat_message.created_at|local_datetime('%H:%M') }}
                                     </time>
                                 </div>
                             </article>
@@ -146,7 +168,37 @@ Live Chat | HelpDesk Pro
                     {% endif %}
                 </div>
 
-                {% if admin_can_reply %}
+                {% if active_conversation.resolution_requested_at %}
+                    <div class="chat-resolution-card">
+                        {% if current_user.is_admin %}
+                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                            <div>
+                                <h3>Feedback request sent</h3>
+                                <p>The staff member can rate this support session. You can close and delete it now if no rating is needed.</p>
+                            </div>
+                        {% else %}
+                            <i class="fa-solid fa-face-smile" aria-hidden="true"></i>
+                            <div>
+                                <h3>Was your issue resolved?</h3>
+                                <p>Choose a rating for this support session. Submitting it closes and clears this chat.</p>
+                                <form method="POST" action="{{ url_for('submit_chat_feedback', conversation_id=active_conversation.id) }}" class="chat-rating-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <div class="chat-star-rating" aria-label="Rate support from one to five stars">
+                                        {% for score in range(5, 0, -1) %}
+                                            <input id="rating-{{ score }}" type="radio" name="rating" value="{{ score }}" required>
+                                            <label for="rating-{{ score }}" title="{{ score }} star{{ '' if score == 1 else 's' }}">★</label>
+                                        {% endfor %}
+                                    </div>
+                                    <button type="submit" class="chat-send-button">Submit rating &amp; close</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('continue_chat_conversation', conversation_id=active_conversation.id) }}" class="chat-continue-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit">I still need help</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% elif admin_can_reply %}
                     <form method="POST" action="{{ url_for('send_chat_message') }}" class="chat-composer">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         {% if current_user.is_admin %}
@@ -167,6 +219,12 @@ Live Chat | HelpDesk Pro
                             Send
                         </button>
                     </form>
+                    {% if current_user.is_admin %}
+                        <div class="chat-claim-notice" data-chat-taken-notice hidden>
+                            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                            This chat has been taken by another admin.
+                        </div>
+                    {% endif %}
                 {% else %}
                     <div class="chat-claim-notice">
                         <i class="fa-solid fa-lock" aria-hidden="true"></i>

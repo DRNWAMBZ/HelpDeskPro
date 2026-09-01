@@ -35,7 +35,7 @@ Manage Knowledge Base | HelpDesk Pro
                             <span class="knowledge-category">{{ article.category }}</span>
                             <h3>{{ article.title }}</h3>
                             <p>
-                                Updated {{ article.updated_at.strftime("%d %b %Y") }} by {{ article.author.username }}
+                                Updated {{ article.updated_at|local_datetime("%d %b %Y") }} by {{ article.author.username }}
                             </p>
                         </div>
 

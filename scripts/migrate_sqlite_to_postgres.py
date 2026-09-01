@@ -28,6 +28,7 @@ TABLE_ORDER = (
     "ticket_reply",
     "chat_conversation",
     "chat_message",
+    "chat_satisfaction_rating",
     "notification",
     "knowledge_article",
     "knowledge_article_image",

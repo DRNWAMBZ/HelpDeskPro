@@ -1,5 +1,5 @@
-from sqlalchemy import text, or_
-from datetime import datetime, timedelta
+from sqlalchemy import text, or_, func
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from hmac import compare_digest
 from secrets import token_urlsafe
@@ -10,6 +10,7 @@ import logging
 import os
 import smtplib
 import warnings
+from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -17,6 +18,7 @@ from flask import (
     render_template,
     request,
     redirect,
+    jsonify,
     session,
     url_for,
     flash,
@@ -111,6 +113,10 @@ app.config["MAIL_FROM"] = os.environ.get("MAIL_FROM")
 app.config["MAIL_USE_TLS"] = (
     os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
 )
+app.config["DISPLAY_TIMEZONE"] = os.environ.get(
+    "DISPLAY_TIMEZONE",
+    "Africa/Lagos",
+)
 
 KNOWLEDGE_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 KNOWLEDGE_IMAGE_MAX_PIXELS = 25_000_000
@@ -127,6 +133,13 @@ TICKET_CATEGORIES = (
     "Software",
     "Other",
 )
+
+TICKET_PROGRESS_UPDATES = {
+    "investigating": "Support is investigating your issue.",
+    "work_in_progress": "Support is actively working on a resolution.",
+    "awaiting_information": "Support needs a little more information to continue.",
+    "escalated": "Your issue has been escalated for further review.",
+}
 
 db = SQLAlchemy(app)
 
@@ -391,6 +404,9 @@ class TicketReply(db.Model):
 # LIVE CHAT MODELS
 # -------------------------
 
+CHAT_INACTIVITY_MINUTES = 24 * 60
+
+
 class ChatConversation(db.Model):
 
     id = db.Column(
@@ -425,6 +441,11 @@ class ChatConversation(db.Model):
     )
 
     assigned_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    resolution_requested_at = db.Column(
         db.DateTime,
         nullable=True,
     )
@@ -501,6 +522,33 @@ class ChatMessage(db.Model):
 
     def __repr__(self):
         return f"<ChatMessage {self.id}>"
+
+
+class ChatSatisfactionRating(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    rating = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+def clear_inactive_chat_conversations():
+    """Remove chat threads that have been inactive for one full day."""
+
+    cutoff = datetime.utcnow() - timedelta(
+        minutes=CHAT_INACTIVITY_MINUTES,
+    )
+
+    inactive_conversations = ChatConversation.query.filter(
+        ChatConversation.last_message_at < cutoff,
+    ).all()
+
+    for conversation in inactive_conversations:
+        db.session.delete(conversation)
+
+    if inactive_conversations:
+        db.session.commit()
 
 
 # -------------------------
@@ -1045,7 +1093,8 @@ def add_knowledge_article_image(article):
     if image_width * image_height > KNOWLEDGE_IMAGE_MAX_PIXELS:
         return "The image is too large. Choose one below 25 megapixels.", None
 
-    upload_directory = Path(app.static_folder) / "images" / "knowledge" / "uploads"
+    upload_directory = Path(app.static_folder) / \
+        "images" / "knowledge" / "uploads"
     upload_directory.mkdir(parents=True, exist_ok=True)
 
     filename = (
@@ -1087,6 +1136,21 @@ def inject_notification_count():
         "csrf_token": get_csrf_token(),
         "unread_notification_count": unread_notification_count,
     }
+
+
+@app.template_filter("local_datetime")
+def local_datetime(value, time_format="%d %b %Y, %H:%M"):
+    """Display legacy UTC timestamps in the configured local timezone."""
+
+    if value is None:
+        return "—"
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+
+    return value.astimezone(
+        ZoneInfo(app.config["DISPLAY_TIMEZONE"])
+    ).strftime(time_format)
 
 
 # =========================================================
@@ -1270,6 +1334,30 @@ def forgot_password():
     return render_template(
         "auth/forgot_password.html"
     )
+
+
+@app.route("/chat/<int:conversation_id>/availability")
+@admin_required
+def chat_conversation_availability(conversation_id):
+
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user.has(User.is_admin.is_(False)),
+    ).first()
+
+    if conversation is None:
+        return jsonify({"state": "closed"})
+
+    if (
+        conversation.assigned_admin_id is not None
+        and conversation.assigned_admin_id != current_user.id
+    ):
+        return jsonify({"state": "taken"})
+
+    if conversation.assigned_admin_id == current_user.id:
+        return jsonify({"state": "assigned_to_you"})
+
+    return jsonify({"state": "available"})
 
 
 @app.route(
@@ -2237,10 +2325,39 @@ def chat():
     conversations = []
     active_conversation = None
 
+    clear_inactive_chat_conversations()
+
     if current_user.is_admin:
-        conversations = ChatConversation.query.order_by(
+        staff_started_chat = db.session.query(
+            ChatMessage.id
+        ).filter(
+            ChatMessage.conversation_id == ChatConversation.id,
+            ChatMessage.sender_id == ChatConversation.user_id,
+        ).exists()
+
+        visible_conversations = ChatConversation.query.filter(
+            ChatConversation.user.has(User.is_admin.is_(False)),
+            ChatConversation.user.has(User.is_active.is_(True)),
+            staff_started_chat,
+            or_(
+                ChatConversation.assigned_admin_id.is_(None),
+                ChatConversation.assigned_admin_id == current_user.id,
+            ),
+        )
+
+        unassigned_conversations = visible_conversations.filter(
+            ChatConversation.assigned_admin_id.is_(None),
+        ).order_by(
             ChatConversation.last_message_at.desc(),
         ).all()
+
+        assigned_conversations = visible_conversations.filter(
+            ChatConversation.assigned_admin_id == current_user.id,
+        ).order_by(
+            ChatConversation.last_message_at.desc(),
+        ).all()
+
+        conversations = unassigned_conversations + assigned_conversations
 
         conversation_id = request.args.get(
             "conversation",
@@ -2248,9 +2365,25 @@ def chat():
         )
 
         if conversation_id:
-            active_conversation = ChatConversation.query.get_or_404(
-                conversation_id
-            )
+            active_conversation = visible_conversations.filter(
+                ChatConversation.id == conversation_id,
+            ).first()
+
+            if active_conversation is None:
+                unavailable_conversation = ChatConversation.query.filter(
+                    ChatConversation.id == conversation_id,
+                    ChatConversation.user.has(User.is_admin.is_(False)),
+                ).first()
+
+                if unavailable_conversation is not None:
+                    flash(
+                        "This chat has been taken by another admin.",
+                        "info",
+                    )
+                    return redirect(url_for("chat"))
+
+                flash("This chat is no longer active.", "info")
+                return redirect(url_for("chat"))
         elif conversations:
             active_conversation = conversations[0]
     else:
@@ -2266,12 +2399,14 @@ def chat():
             db.session.commit()
 
     messages = []
+    unread_message_counts = {}
 
     admin_can_reply = (
-        not current_user.is_admin
-        or (
-            active_conversation is not None
-            and active_conversation.assigned_admin_id == current_user.id
+        active_conversation is not None
+        and active_conversation.resolution_requested_at is None
+        and (
+            not current_user.is_admin
+            or active_conversation.assigned_admin_id == current_user.id
         )
     )
 
@@ -2293,12 +2428,29 @@ def chat():
             )
             db.session.commit()
 
+    if current_user.is_admin and conversations:
+        unread_message_counts = dict(
+            db.session.query(
+                ChatMessage.conversation_id,
+                func.count(ChatMessage.id),
+            ).filter(
+                ChatMessage.conversation_id.in_(
+                    [conversation.id for conversation in conversations]
+                ),
+                ChatMessage.sender_id != current_user.id,
+                ChatMessage.is_read.is_(False),
+            ).group_by(
+                ChatMessage.conversation_id,
+            ).all()
+        )
+
     return render_template(
         "chat.html",
         conversations=conversations,
         active_conversation=active_conversation,
         admin_can_reply=admin_can_reply,
         messages=messages,
+        unread_message_counts=unread_message_counts,
     )
 
 
@@ -2309,10 +2461,14 @@ def chat():
 @admin_required
 def claim_chat_conversation(conversation_id):
 
-    conversation = db.session.get_or_404(
-        ChatConversation,
-        conversation_id,
-    )
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user.has(User.is_admin.is_(False)),
+    ).first()
+
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
 
     if conversation.assigned_admin_id == current_user.id:
         flash("This chat is already assigned to you.", "info")
@@ -2337,9 +2493,10 @@ def claim_chat_conversation(conversation_id):
             db.session.rollback()
             flash("Another admin claimed this chat first.", "danger")
 
-    return redirect(
-        url_for("chat", conversation=conversation_id)
-    )
+    if conversation.assigned_admin_id == current_user.id:
+        return redirect(url_for("chat", conversation=conversation_id))
+
+    return redirect(url_for("chat"))
 
 
 @app.route(
@@ -2349,10 +2506,14 @@ def claim_chat_conversation(conversation_id):
 @admin_required
 def release_chat_conversation(conversation_id):
 
-    conversation = db.session.get_or_404(
-        ChatConversation,
-        conversation_id,
-    )
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user.has(User.is_admin.is_(False)),
+    ).first()
+
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
 
     if conversation.assigned_admin_id != current_user.id:
         flash("Only the assigned admin can release this chat.", "danger")
@@ -2367,6 +2528,135 @@ def release_chat_conversation(conversation_id):
     )
 
 
+@app.route("/chat/<int:conversation_id>/request-feedback", methods=["POST"])
+@admin_required
+def request_chat_feedback(conversation_id):
+
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user.has(User.is_admin.is_(False)),
+    ).first()
+
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
+
+    if conversation.assigned_admin_id != current_user.id:
+        flash("This chat is being handled by another admin.", "info")
+        return redirect(url_for("chat"))
+
+    if conversation.resolution_requested_at is None:
+        conversation.resolution_requested_at = datetime.utcnow()
+        conversation.last_message_at = datetime.utcnow()
+        db.session.commit()
+        flash("Feedback requested. The staff member can now rate this support chat.", "success")
+    else:
+        flash("This chat is already awaiting feedback.", "info")
+
+    return redirect(url_for("chat", conversation=conversation.id))
+
+
+@app.route("/chat/<int:conversation_id>/close", methods=["POST"])
+@admin_required
+def close_chat_conversation(conversation_id):
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user.has(User.is_admin.is_(False)),
+    ).first()
+
+    # A second tab (or the staff member's rating submission) may have already
+    # removed this conversation.  Treat that as a completed action instead of
+    # sending the administrator to a 404 page.
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
+
+    if conversation.assigned_admin_id != current_user.id:
+        flash("This chat is being handled by another admin.", "info")
+        return redirect(url_for("chat"))
+
+    if conversation.resolution_requested_at is None:
+        flash("Request staff feedback before closing this chat.", "info")
+        return redirect(url_for("chat", conversation=conversation.id))
+
+    db.session.delete(conversation)
+    db.session.commit()
+    flash("The completed chat and its messages were deleted.", "success")
+    return redirect(url_for("chat"))
+
+
+@app.route("/chat/<int:conversation_id>/feedback", methods=["POST"])
+@login_required
+def submit_chat_feedback(conversation_id):
+
+    if current_user.is_admin:
+        abort(403)
+
+    rating = request.form.get("rating", type=int)
+
+    if rating not in {1, 2, 3, 4, 5}:
+        flash("Please choose a rating from one to five stars.", "danger")
+        return redirect(url_for("chat"))
+
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user_id == current_user.id,
+    ).first()
+
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
+
+    if (
+        conversation.resolution_requested_at is None
+        or conversation.assigned_admin_id is None
+    ):
+        flash(
+            "This chat is no longer awaiting feedback.",
+            "info",
+        )
+        return redirect(url_for("chat"))
+
+    db.session.add(ChatSatisfactionRating(
+        user_id=current_user.id,
+        admin_id=conversation.assigned_admin_id,
+        rating=rating,
+    ))
+    db.session.delete(conversation)
+    db.session.commit()
+
+    flash("Thanks for your feedback. This chat has now been closed.", "success")
+    return redirect(url_for("chat"))
+
+
+@app.route("/chat/<int:conversation_id>/continue", methods=["POST"])
+@login_required
+def continue_chat_conversation(conversation_id):
+
+    if current_user.is_admin:
+        abort(403)
+
+    conversation = ChatConversation.query.filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user_id == current_user.id,
+    ).first()
+
+    if conversation is None:
+        flash("This chat has already been closed.", "info")
+        return redirect(url_for("chat"))
+
+    if conversation.resolution_requested_at is None:
+        flash("This chat is already open for support.", "info")
+        return redirect(url_for("chat", conversation=conversation.id))
+
+    conversation.resolution_requested_at = None
+    conversation.last_message_at = datetime.utcnow()
+    db.session.commit()
+
+    flash("The chat has been reopened so you can continue with support.", "info")
+    return redirect(url_for("chat"))
+
+
 @app.route(
     "/chat/send",
     methods=["POST"],
@@ -2375,6 +2665,8 @@ def release_chat_conversation(conversation_id):
 def send_chat_message():
 
     validate_csrf_token()
+
+    clear_inactive_chat_conversations()
 
     message = request.form.get(
         "message",
@@ -2401,7 +2693,11 @@ def send_chat_message():
             conversation_id,
         )
 
-        if conversation is None:
+        if (
+            conversation is None
+            or conversation.user.is_admin
+            or conversation.resolution_requested_at is not None
+        ):
             abort(404)
 
         if conversation.assigned_admin_id != current_user.id:
@@ -2731,6 +3027,67 @@ def admin_update_ticket_status(ticket_id):
     )
 
 
+@app.route(
+    "/admin/ticket/<int:ticket_id>/progress-update",
+    methods=["POST"],
+)
+@admin_required
+def admin_ticket_progress_update(ticket_id):
+
+    ticket = Ticket.query.get_or_404(ticket_id)
+    update_type = request.form.get("update_type", "")
+    additional_note = request.form.get("additional_note", "").strip()
+
+    if ticket.status == "Resolved":
+        flash("Reopen this ticket before sending a progress update.", "danger")
+        return redirect(
+            url_for("admin_ticket_details", ticket_id=ticket.id)
+        )
+
+    if update_type not in TICKET_PROGRESS_UPDATES:
+        flash("Choose a valid progress update.", "danger")
+        return redirect(
+            url_for("admin_ticket_details", ticket_id=ticket.id)
+        )
+
+    if len(additional_note) > 1000:
+        flash("Keep the additional note below 1,000 characters.", "danger")
+        return redirect(
+            url_for("admin_ticket_details", ticket_id=ticket.id)
+        )
+
+    message = TICKET_PROGRESS_UPDATES[update_type]
+
+    if additional_note:
+        message = f"{message}\n\n{additional_note}"
+
+    db.session.add(
+        TicketReply(
+            message=message,
+            ticket_id=ticket.id,
+            user_id=current_user.id,
+        )
+    )
+    ticket.status = "In Progress"
+
+    if ticket.user.is_active:
+        create_notification(
+            recipient_id=ticket.user_id,
+            ticket_id=ticket.id,
+            message=(
+                f"Support posted a progress update on ticket "
+                f"HDP-{ticket.ticket_number:04d}."
+            ),
+        )
+
+    db.session.commit()
+    flash("Progress update sent to the user.", "success")
+
+    return redirect(
+        url_for("admin_ticket_details", ticket_id=ticket.id)
+    )
+
+
 # -------------------------
 # ADMIN REPLY TO TICKET
 # -------------------------
@@ -2810,13 +3167,29 @@ def admin_reply_to_ticket(ticket_id):
 @admin_required
 def admin_users():
 
-    users = User.query.order_by(
+    search = request.args.get("search", "").strip()
+    users_query = User.query
+
+    if search:
+        search_term = f"%{search}%"
+        user_filters = [
+            User.username.ilike(search_term),
+            User.email.ilike(search_term),
+        ]
+
+        if search.isdigit():
+            user_filters.append(User.id == int(search))
+
+        users_query = users_query.filter(or_(*user_filters))
+
+    users = users_query.order_by(
         User.id.desc()
     ).all()
 
     return render_template(
         "admin/users.html",
         users=users,
+        search=search,
     )
 
 
@@ -3057,6 +3430,7 @@ def toggle_user_status(user_id):
             synchronize_session=False,
         )
 
+
     db.session.commit()
 
     status = (
@@ -3074,10 +3448,210 @@ def toggle_user_status(user_id):
         url_for("admin_users")
     )
 
+# -------------------------
+# DELETE USER
+# -------------------------
 
+
+@app.route(
+    "/admin/users/<int:user_id>/delete",
+    methods=["POST"],
+)
+@admin_required
+def delete_user(user_id):
+
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    # Never allow an administrator to delete their own account.
+    if user.id == current_user.id:
+
+        flash(
+            "You cannot delete your own administrator account.",
+            "danger",
+        )
+
+        return redirect(
+            url_for("admin_users")
+        )
+
+    # Never allow the final administrator account to be deleted.
+    if user.is_admin:
+
+        admin_count = User.query.filter_by(
+            is_admin=True
+        ).count()
+
+        if admin_count <= 1:
+
+            flash(
+                "You cannot delete the last administrator.",
+                "danger",
+            )
+
+            return redirect(
+                url_for("admin_users")
+            )
+
+        # If the admin being deleted is active, make sure
+        # another active administrator will remain.
+        if user.is_active:
+
+            active_admin_count = User.query.filter_by(
+                is_admin=True,
+                is_active=True,
+            ).count()
+
+            if active_admin_count <= 1:
+
+                flash(
+                    "You cannot delete the last active administrator.",
+                    "danger",
+                )
+
+                return redirect(
+                    url_for("admin_users")
+                )
+
+    username = user.username
+
+    try:
+
+        # ---------------------------------
+        # RELEASE CHAT ASSIGNMENTS
+        # ---------------------------------
+
+        ChatConversation.query.filter_by(
+            assigned_admin_id=user.id,
+        ).update(
+            {
+                "assigned_admin_id": None,
+                "assigned_at": None,
+            },
+            synchronize_session=False,
+        )
+
+
+        # ---------------------------------
+        # PASSWORD RESET TOKENS
+        # ---------------------------------
+
+        PasswordResetToken.query.filter_by(
+            user_id=user.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        ChatSatisfactionRating.query.filter(
+            or_(
+                ChatSatisfactionRating.user_id == user.id,
+                ChatSatisfactionRating.admin_id == user.id,
+            )
+        ).delete(
+            synchronize_session=False
+        )
+
+        # ---------------------------------
+        # NOTIFICATIONS RECEIVED BY USER
+        # ---------------------------------
+
+        Notification.query.filter_by(
+            recipient_id=user.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # ---------------------------------
+        # REPLIES AUTHORED BY USER
+        # ---------------------------------
+
+        TicketReply.query.filter_by(
+            user_id=user.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # ---------------------------------
+        # CHAT MESSAGES SENT BY USER
+        # ---------------------------------
+
+        ChatMessage.query.filter_by(
+            sender_id=user.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # ---------------------------------
+        # USER'S CHAT CONVERSATION
+        # ---------------------------------
+
+        owned_conversations = ChatConversation.query.filter_by(
+            user_id=user.id
+        ).all()
+
+        for conversation in owned_conversations:
+            db.session.delete(conversation)
+
+        # ---------------------------------
+        # USER'S TICKETS
+        # ---------------------------------
+
+        owned_tickets = Ticket.query.filter_by(
+            user_id=user.id
+        ).all()
+
+        for ticket in owned_tickets:
+            db.session.delete(ticket)
+
+        # ---------------------------------
+        # KNOWLEDGE ARTICLES AUTHORED BY USER
+        # ---------------------------------
+
+        authored_articles = KnowledgeArticle.query.filter_by(
+            author_id=user.id
+        ).all()
+
+        for article in authored_articles:
+            db.session.delete(article)
+
+        # ---------------------------------
+        # DELETE USER ACCOUNT
+        # ---------------------------------
+
+        db.session.delete(user)
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        app.logger.exception(
+            "Failed to delete user account ID %s",
+            user_id,
+        )
+
+        flash(
+            "The account could not be deleted. No changes were saved.",
+            "danger",
+        )
+
+        return redirect(
+            url_for("admin_users")
+        )
+
+    flash(
+        f"{username}'s account was permanently deleted.",
+        "success",
+    )
+
+    return redirect(
+        url_for("admin_users")
+    )
 # =========================================================
 # LOGOUT
 # =========================================================
+
 
 @app.route("/logout")
 @login_required
@@ -3144,6 +3718,15 @@ def ensure_database_schema():
             text(
                 "ALTER TABLE chat_conversation "
                 "ADD COLUMN assigned_at DATETIME"
+            )
+        )
+        schema_changed = True
+
+    if "resolution_requested_at" not in existing_chat_columns:
+        db.session.execute(
+            text(
+                "ALTER TABLE chat_conversation "
+                "ADD COLUMN resolution_requested_at DATETIME"
             )
         )
         schema_changed = True

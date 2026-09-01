@@ -234,7 +234,7 @@ Ticket Management
                         <span>{{ ticket.category }}</span>
 
                         <span>
-                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                            {{ ticket.created_at|local_datetime("%d %b %Y") }}
                         </span>
                     </div>
                 </div>
@@ -300,7 +300,7 @@ Ticket Management
                         <span>{{ ticket.category }}</span>
 
                         <span>
-                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                            {{ ticket.created_at|local_datetime("%d %b %Y") }}
                         </span>
                     </div>
                 </div>
@@ -366,7 +366,7 @@ Ticket Management
                         <span>{{ ticket.category }}</span>
 
                         <span>
-                            {{ ticket.created_at.strftime("%d %b %Y") }}
+                            {{ ticket.created_at|local_datetime("%d %b %Y") }}
                         </span>
                     </div>
                 </div>

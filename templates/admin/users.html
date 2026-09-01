@@ -48,6 +48,27 @@ Manage Users
                 </p>
             </div>
 
+            <form
+                method="GET"
+                action="{{ url_for('admin_users') }}"
+                class="admin-ticket-filter-form"
+            >
+                <div class="admin-ticket-search">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search name, email or ID..."
+                        aria-label="Search users"
+                    >
+                </div>
+                <button type="submit" class="admin-filter-btn">Search</button>
+                {% if search %}
+                    <a href="{{ url_for('admin_users') }}" class="admin-clear-filter-btn">Clear</a>
+                {% endif %}
+            </form>
+
         </div>
 
 

@@ -113,7 +113,7 @@ Admin Dashboard
 
                         <span>
                             {% if ticket.created_at %}
-                                {{ ticket.created_at.strftime("%d %b %Y") }}
+                                {{ ticket.created_at|local_datetime("%d %b %Y") }}
                             {% else %}
                                 —
                             {% endif %}

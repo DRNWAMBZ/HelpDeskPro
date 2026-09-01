@@ -92,7 +92,7 @@ Tickets
 
                             <span>
                                 {% if ticket.created_at %}
-                                    {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
+                                    {{ ticket.created_at|local_datetime('%d %b %Y, %H:%M') }}
                                 {% else %}
                                     —
                                 {% endif %}

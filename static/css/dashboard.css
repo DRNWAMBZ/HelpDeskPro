@@ -3470,6 +3470,12 @@
 }
 
 
+.chat-unread-state {
+    color: #1767A8;
+    font-weight: 800;
+}
+
+
 .chat-message-list {
     display: flex;
     flex: 1;
@@ -3595,6 +3601,108 @@
 
 .chat-claim-notice i {
     color: #1767A8;
+}
+
+
+.chat-resolution-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 18px 24px;
+
+    border-top: 1px solid #dbe7ef;
+    background: #f6fbfe;
+}
+
+
+.chat-resolution-card > i {
+    margin-top: 3px;
+
+    color: #e6a700;
+    font-size: 20px;
+}
+
+
+.chat-resolution-card h3,
+.chat-resolution-card p {
+    margin: 0;
+}
+
+
+.chat-resolution-card h3 {
+    color: #203647;
+    font-size: 14px;
+}
+
+
+.chat-resolution-card p {
+    margin-top: 4px;
+
+    color: #617887;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+.chat-rating-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+
+.chat-star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+}
+
+
+.chat-star-rating input {
+    position: absolute;
+    opacity: 0;
+}
+
+
+.chat-star-rating label {
+    color: #c7d4dc;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+
+.chat-star-rating label:hover,
+.chat-star-rating label:hover ~ label,
+.chat-star-rating input:checked ~ label {
+    color: #f0b429;
+}
+
+
+.chat-star-rating input:focus-visible + label {
+    outline: 2px solid #1767A8;
+    outline-offset: 2px;
+}
+
+
+.chat-continue-form {
+    margin: 11px 0 0;
+}
+
+
+.chat-continue-form button {
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+    color: #1767A8;
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 

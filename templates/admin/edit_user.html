@@ -35,7 +35,14 @@ Edit User
             class="ticket-form"
         >
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+
+
+
+                >
 
             <div class="input-group">
 
@@ -100,24 +107,52 @@ Edit User
                 </select>
 
             </div>
+
+
+
+
+
             <div class="input-group">
 
-    <label for="new_password">
-        New Password
-    </label>
+                <label for="new_password">
+                    New Password
 
-    <input
-        type="password"
-        id="new_password"
-        name="new_password"
-        placeholder="Leave blank to keep current password"
-    >
 
-    <small>
-        Only enter a password if you want to reset this user's password.
-    </small>
+                </label>
 
-</div>
+
+                <div class="admin-password-field">
+
+                    <input
+                        type="password"
+                        id="new_password"
+                        name="new_password"
+                        placeholder="Leave blank to keep current password"
+                    >
+
+                    <button
+                        type="button"
+                        class="admin-password-toggle"
+                        data-password-toggle="new_password"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+
+
+
+                </div>
+
+                <small>
+                    Only enter a password if you want to reset this user's password.
+
+
+                </small>
+
+
+
+            </div>
 
 
             <div class="settings-actions">
@@ -143,6 +178,64 @@ Edit User
 
     </div>
 
+
+    {% if user.id != current_user.id %}
+
+    <div class="admin-danger-zone">
+
+        <div class="admin-danger-zone-copy">
+
+            <span class="admin-danger-label">
+                Danger Zone
+            </span>
+
+            <h2>
+                Delete Account
+            </h2>
+
+            <p>
+                Permanently delete {{ user.username }} and the account data
+                associated with this user. This action cannot be undone.
+            </p>
+
+        </div>
+
+        <form
+            method="POST"
+            action="{{ url_for('delete_user', user_id=user.id) }}"
+            class="admin-delete-user-form"
+            data-username="{{ user.username }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <button
+                type="submit"
+                class="admin-delete-user-btn"
+            >
+                <i class="fa-solid fa-trash-can"></i>
+                Delete Account
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endif %}
+
+
+
 </div>
 
-{% endblock %}
+
+<script
+    src="{{ url_for('static', filename='js/admin-user.js') }}"
+    defer
+
+    ></script>
+
+    {% endblock %}

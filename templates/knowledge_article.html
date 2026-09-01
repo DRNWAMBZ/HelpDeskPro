@@ -15,7 +15,7 @@
     <header class="knowledge-article-header">
         <span class="knowledge-category">{{ article.category }}</span>
         <h1>{{ article.title }}</h1>
-        <p>Last updated {{ article.updated_at.strftime("%d %b %Y") }}</p>
+        <p>Last updated {{ article.updated_at|local_datetime("%d %b %Y") }}</p>
     </header>
 
     <div class="knowledge-article-body">

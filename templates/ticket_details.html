@@ -68,7 +68,7 @@ Ticket #{{ ticket.id }}
             <span>Created</span>
 
             <strong>
-                {{ ticket.created_at.strftime('%d %b %Y, %H:%M') }}
+                {{ ticket.created_at|local_datetime('%d %b %Y, %H:%M') }}
             </strong>
 
         </div>
@@ -159,7 +159,7 @@ Ticket #{{ ticket.id }}
                         </strong>
 
                         <span>
-                            {{ reply.created_at.strftime('%d %b %Y, %H:%M') }}
+                            {{ reply.created_at|local_datetime('%d %b %Y, %H:%M') }}
                         </span>
 
                     </div>

@@ -114,7 +114,7 @@ Dashboard
                                 </span>
 
                                 <span>
-                                    {{ ticket.created_at.strftime("%d %b %Y") }}
+                                    {{ ticket.created_at|local_datetime("%d %b %Y") }}
                                 </span>
                             </div>
                         </div>
