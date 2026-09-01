@@ -1710,7 +1710,7 @@ def create_ticket():
         db.session.commit()
 
         flash(
-            f"Ticket #{next_ticket_number} created successfully!",
+            "Your support request was created successfully!",
             "success",
         )
 
@@ -1897,8 +1897,7 @@ def reply_to_ticket(ticket_id):
             recipient_id=admin.id,
             ticket_id=ticket.id,
             message=(
-                f"{current_user.username} replied to ticket "
-                f"#{ticket.ticket_number}."
+                f"{current_user.username} replied to your support request."
             ),
         )
 
@@ -3186,8 +3185,7 @@ def admin_update_ticket_status(ticket_id):
             recipient_id=ticket.user_id,
             ticket_id=ticket.id,
             message=(
-                f"Your ticket #{ticket.ticket_number} "
-                "has been resolved."
+                "Your support request has been resolved."
             ),
         )
 
@@ -3272,8 +3270,7 @@ def admin_ticket_progress_update(ticket_id):
             recipient_id=ticket.user_id,
             ticket_id=ticket.id,
             message=(
-                f"Support posted a progress update on ticket "
-                f"#{ticket.ticket_number}."
+                "Support posted a progress update on your support request."
             ),
         )
 
@@ -3332,8 +3329,7 @@ def admin_reply_to_ticket(ticket_id):
             recipient_id=ticket.user_id,
             ticket_id=ticket.id,
             message=(
-                f"Support replied to your ticket "
-                f"#{ticket.ticket_number}."
+                "Support replied to your support request."
             ),
         )
 

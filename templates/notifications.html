@@ -79,8 +79,7 @@ Notifications | HelpDesk Pro
                             </span>
 
                             <span class="notification-meta">
-                                Ticket #{{ notification.ticket.ticket_number }}
-                                · {{ notification.created_at|local_datetime("%d %b %Y, %I:%M %p") }}
+                                {{ notification.created_at|local_datetime("%d %b %Y, %I:%M %p") }}
                             </span>
                         </span>
 
