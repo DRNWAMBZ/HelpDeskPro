@@ -333,6 +333,8 @@ class Ticket(db.Model):
         default="Open",
     )
 
+    due_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow,
@@ -1770,6 +1772,17 @@ def ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    if ticket.due_at is None:
+        sla_state = "No due date"
+    elif ticket.status == "Resolved":
+        sla_state = "Resolved"
+    elif ticket.due_at < datetime.utcnow():
+        sla_state = "Overdue"
+    elif ticket.due_at <= datetime.utcnow() + timedelta(hours=24):
+        sla_state = "Due soon"
+    else:
+        sla_state = "On track"
+
     internal_notes = TicketInternalNote.query.filter_by(
         ticket_id=ticket.id,
     ).order_by(TicketInternalNote.created_at.asc()).all()
@@ -1778,6 +1791,7 @@ def ticket_details(ticket_id):
         "ticket_details.html",
         ticket=ticket,
         replies=replies,
+        sla_state=sla_state,
         internal_notes=internal_notes,
     )
 
@@ -2985,10 +2999,22 @@ def admin_ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    if ticket.due_at is None:
+        sla_state = "No due date"
+    elif ticket.status == "Resolved":
+        sla_state = "Resolved"
+    elif ticket.due_at < datetime.utcnow():
+        sla_state = "Overdue"
+    elif ticket.due_at <= datetime.utcnow() + timedelta(hours=24):
+        sla_state = "Due soon"
+    else:
+        sla_state = "On track"
+
     return render_template(
         "admin/ticket_details.html",
         ticket=ticket,
         replies=replies,
+        sla_state=sla_state,
     )
 
 
@@ -3062,6 +3088,24 @@ def admin_update_ticket_status(ticket_id):
             ticket_id=ticket.id,
         )
     )
+
+
+@app.route("/admin/ticket/<int:ticket_id>/due-date", methods=["POST"])
+@admin_required
+def update_ticket_due_date(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    value = request.form.get("due_at", "").strip()
+    if not value:
+        ticket.due_at = None
+    else:
+        try:
+            ticket.due_at = datetime.strptime(value, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            flash("Choose a valid due date and time.", "danger")
+            return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
+    db.session.commit()
+    flash("Due date updated.", "success")
+    return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
 
 
 @app.route(
