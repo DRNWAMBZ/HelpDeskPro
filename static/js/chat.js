@@ -16,6 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.reload();
         }
 
-    }, 20000);
+    }, 6000);
 
 });

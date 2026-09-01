@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | HelpDesk Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+
+<body class="error-page-body">
+    <main class="error-page-card">
+        <span class="error-page-code">{{ status_code }}</span>
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        <a href="{{ url_for('home') }}" class="error-page-link">Return to home</a>
+    </main>
+</body>
+
+</html>

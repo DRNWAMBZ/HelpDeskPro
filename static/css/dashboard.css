@@ -3408,6 +3408,68 @@
 }
 
 
+.chat-assignment-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.chat-assignment-actions form {
+    margin: 0;
+}
+
+
+.chat-claim-button,
+.chat-release-button {
+    min-height: 32px;
+    padding: 0 11px;
+
+    border: 1px solid #0F4C81;
+    border-radius: 8px;
+
+    background: #0F4C81;
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+
+.chat-release-button {
+    border-color: #b9c8d4;
+
+    background: #ffffff;
+    color: #486070;
+}
+
+
+.chat-claim-button:hover {
+    background: #1767A8;
+}
+
+
+.chat-release-button:hover {
+    background: #f3f7fa;
+}
+
+
+.chat-assignment-note,
+.chat-claim-state {
+    color: #718393;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.chat-claim-state.is-claimed {
+    color: #18794e;
+}
+
+
 .chat-message-list {
     display: flex;
     flex: 1;
@@ -3512,6 +3574,27 @@
     border-top: 1px solid #e1ebf1;
 
     background: #ffffff;
+}
+
+
+.chat-claim-notice {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+    padding: 18px 20px;
+
+    border-top: 1px solid #e1ebf1;
+
+    background: #f8fbfd;
+    color: #657988;
+
+    font-size: 12px;
+}
+
+
+.chat-claim-notice i {
+    color: #1767A8;
 }
 
 
@@ -3861,6 +3944,87 @@
 
 
 .guest-wifi-support-button:hover {
+    background: #1767A8;
+}
+
+
+/* =========================================================
+   ERROR PAGES
+   ========================================================= */
+
+.error-page-body {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+
+    margin: 0;
+    padding: 24px;
+
+    background: #eef5fa;
+    font-family: "Segoe UI", sans-serif;
+}
+
+
+.error-page-card {
+    width: min(100%, 480px);
+    padding: 42px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dbe7ef;
+    border-radius: 18px;
+
+    background: #ffffff;
+    box-shadow: 0 18px 42px rgba(15, 76, 129, 0.11);
+    text-align: center;
+}
+
+
+.error-page-code {
+    color: #1767A8;
+
+    font-size: 13px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+}
+
+
+.error-page-card h1 {
+    margin: 11px 0 0;
+
+    color: #0F4C81;
+    font-size: 26px;
+}
+
+
+.error-page-card p {
+    margin: 11px 0 25px;
+
+    color: #667b8b;
+    line-height: 1.6;
+}
+
+
+.error-page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 0 16px;
+
+    border-radius: 9px;
+
+    background: #0F4C81;
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+
+.error-page-link:hover {
     background: #1767A8;
 }
 

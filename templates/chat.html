@@ -25,7 +25,7 @@ Live Chat | HelpDesk Pro
 
         <span class="chat-refresh-status">
             <i class="fa-solid fa-rotate" aria-hidden="true"></i>
-            Refreshes automatically
+            Refreshes every 6 seconds
         </span>
     </header>
 
@@ -50,6 +50,11 @@ Live Chat | HelpDesk Pro
                                 <span class="chat-conversation-copy">
                                     <strong>{{ conversation.user.username }}</strong>
                                     <small>Last activity {{ conversation.last_message_at.strftime('%d %b, %H:%M') }}</small>
+                                    {% if conversation.assigned_admin_id %}
+                                        <small class="chat-claim-state is-claimed">Being attended to</small>
+                                    {% else %}
+                                        <small class="chat-claim-state">Waiting for an admin</small>
+                                    {% endif %}
                                 </span>
                             </a>
                         {% endfor %}
@@ -82,10 +87,36 @@ Live Chat | HelpDesk Pro
                             {% endif %}
                         </h2>
                     </div>
-                    <span class="chat-online-indicator">
-                        <span aria-hidden="true"></span>
-                        Active
-                    </span>
+                    {% if current_user.is_admin %}
+                        <div class="chat-assignment-actions">
+                            {% if active_conversation.assigned_admin_id == current_user.id %}
+                                <span class="chat-online-indicator">
+                                    <span aria-hidden="true"></span>
+                                    You are attending
+                                </span>
+                                <form method="POST" action="{{ url_for('release_chat_conversation', conversation_id=active_conversation.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="chat-release-button">Release chat</button>
+                                </form>
+                            {% elif active_conversation.assigned_admin_id %}
+                                <span class="chat-assignment-note">Another admin is attending</span>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('claim_chat_conversation', conversation_id=active_conversation.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="chat-claim-button">Claim chat</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <span class="chat-online-indicator">
+                            <span aria-hidden="true"></span>
+                            {% if active_conversation.assigned_admin_id %}
+                                Support is attending
+                            {% else %}
+                                Waiting for support
+                            {% endif %}
+                        </span>
+                    {% endif %}
                 </div>
 
                 <div class="chat-message-list" aria-live="polite">
@@ -115,26 +146,37 @@ Live Chat | HelpDesk Pro
                     {% endif %}
                 </div>
 
-                <form method="POST" action="{{ url_for('send_chat_message') }}" class="chat-composer">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    {% if current_user.is_admin %}
-                        <input type="hidden" name="conversation_id" value="{{ active_conversation.id }}">
-                    {% endif %}
+                {% if admin_can_reply %}
+                    <form method="POST" action="{{ url_for('send_chat_message') }}" class="chat-composer">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        {% if current_user.is_admin %}
+                            <input type="hidden" name="conversation_id" value="{{ active_conversation.id }}">
+                        {% endif %}
 
-                    <label class="sr-only" for="message">Message</label>
-                    <textarea
-                        id="message"
-                        name="message"
-                        rows="2"
-                        maxlength="2000"
-                        placeholder="Write a message…"
-                        required
-                    ></textarea>
-                    <button type="submit" class="chat-send-button">
-                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                        Send
-                    </button>
-                </form>
+                        <label class="sr-only" for="message">Message</label>
+                        <textarea
+                            id="message"
+                            name="message"
+                            rows="2"
+                            maxlength="2000"
+                            placeholder="Write a message…"
+                            required
+                        ></textarea>
+                        <button type="submit" class="chat-send-button">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            Send
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="chat-claim-notice">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        {% if active_conversation.assigned_admin_id %}
+                            Another admin is currently attending to this staff member.
+                        {% else %}
+                            Claim this chat to begin replying.
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% else %}
                 <div class="chat-no-conversation">
                     <i class="fa-regular fa-comments" aria-hidden="true"></i>

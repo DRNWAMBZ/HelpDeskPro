@@ -6,6 +6,7 @@ from secrets import token_urlsafe
 from pathlib import Path
 from hashlib import sha256
 from email.message import EmailMessage
+import logging
 import os
 import smtplib
 import warnings
@@ -36,6 +37,7 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash,
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from PIL import Image, UnidentifiedImageError
 
@@ -80,6 +82,26 @@ app.config["PREFERRED_URL_SCHEME"] = (
     if app_environment == "production"
     else "http"
 )
+
+trusted_proxy_count = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
+
+if trusted_proxy_count:
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=trusted_proxy_count,
+        x_proto=trusted_proxy_count,
+    )
+
+if not app.logger.handlers:
+    log_handler = logging.StreamHandler()
+    log_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        )
+    )
+    app.logger.addHandler(log_handler)
+
+app.logger.setLevel(logging.INFO)
 app.config["RESET_TOKEN_TTL_MINUTES"] = 60
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
 app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", "587"))
@@ -211,6 +233,40 @@ class PasswordResetToken(db.Model):
 
     def __repr__(self):
         return f"<PasswordResetToken {self.id}>"
+
+
+# -------------------------
+# RATE LIMIT EVENT MODEL
+# -------------------------
+
+class RateLimitEvent(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    action = db.Column(
+        db.String(50),
+        nullable=False,
+        index=True,
+    )
+
+    identifier = db.Column(
+        db.String(255),
+        nullable=False,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True,
+    )
+
+    def __repr__(self):
+        return f"<RateLimitEvent {self.action}>"
 
 
 # -------------------------
@@ -361,11 +417,33 @@ class ChatConversation(db.Model):
         nullable=False,
     )
 
+    assigned_admin_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=True,
+        index=True,
+    )
+
+    assigned_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
     user = db.relationship(
         "User",
+        foreign_keys=[user_id],
         backref=db.backref(
             "chat_conversation",
             uselist=False,
+        ),
+    )
+
+    assigned_admin = db.relationship(
+        "User",
+        foreign_keys=[assigned_admin_id],
+        backref=db.backref(
+            "assigned_chat_conversations",
+            lazy=True,
         ),
     )
 
@@ -728,6 +806,129 @@ def apply_security_headers(response):
     return response
 
 
+def render_error_page(status_code, title, message):
+
+    return render_template(
+        "errors/error.html",
+        status_code=status_code,
+        title=title,
+        message=message,
+    ), status_code
+
+
+@app.errorhandler(400)
+def bad_request(error):
+
+    return render_error_page(
+        400,
+        "Request could not be verified",
+        "Please refresh the page and try again.",
+    )
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+
+    return render_error_page(
+        404,
+        "Page not found",
+        "The page you requested is unavailable or may have moved.",
+    )
+
+
+@app.errorhandler(413)
+def request_too_large(error):
+
+    return render_error_page(
+        413,
+        "Upload is too large",
+        "Choose a smaller file and try again.",
+    )
+
+
+@app.errorhandler(429)
+def too_many_requests(error):
+
+    return render_error_page(
+        429,
+        "Please wait before trying again",
+        "Too many requests were made from this device. Try again shortly.",
+    )
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+
+    db.session.rollback()
+    app.logger.exception("Unhandled application error")
+
+    return render_error_page(
+        500,
+        "Something went wrong",
+        "Our team has been notified. Please try again shortly.",
+    )
+
+
+def rate_limit_identifiers(email=""):
+
+    remote_address = request.remote_addr or "unknown"
+    identifiers = [f"ip:{remote_address}"]
+
+    if email:
+        identifiers.append(f"email:{email.strip().lower()}")
+
+    return identifiers
+
+
+def is_rate_limited(action, identifiers, limit, window_minutes):
+
+    cutoff = datetime.utcnow() - timedelta(minutes=window_minutes)
+
+    for identifier in identifiers:
+        attempts = RateLimitEvent.query.filter(
+            RateLimitEvent.action == action,
+            RateLimitEvent.identifier == identifier,
+            RateLimitEvent.created_at >= cutoff,
+        ).count()
+
+        if attempts >= limit:
+            return True
+
+    return False
+
+
+def record_rate_limit_attempt(action, identifiers):
+
+    RateLimitEvent.query.filter(
+        RateLimitEvent.created_at < (
+            datetime.utcnow() - timedelta(days=1)
+        )
+    ).delete(
+        synchronize_session=False,
+    )
+
+    for identifier in identifiers:
+        db.session.add(
+            RateLimitEvent(
+                action=action,
+                identifier=identifier,
+            )
+        )
+
+    db.session.commit()
+
+
+def clear_rate_limit_attempts(action, identifiers):
+
+    RateLimitEvent.query.filter(
+        RateLimitEvent.action == action,
+        RateLimitEvent.identifier.in_(identifiers),
+    ).delete(
+        synchronize_session=False,
+    )
+    db.session.commit()
+
+
 def hash_reset_token(token):
 
     return sha256(token.encode("utf-8")).hexdigest()
@@ -921,6 +1122,15 @@ def login():
             "password",
             "",
         )
+        identifiers = rate_limit_identifiers(email)
+
+        if is_rate_limited(
+            "login",
+            identifiers,
+            limit=5,
+            window_minutes=15,
+        ):
+            abort(429)
 
         user = User.query.filter_by(
             email=email
@@ -945,6 +1155,7 @@ def login():
 
             login_user(user)
             session.permanent = True
+            clear_rate_limit_attempts("login", identifiers)
 
             if user.is_admin:
 
@@ -960,6 +1171,8 @@ def login():
             "Invalid email or password.",
             "danger",
         )
+
+        record_rate_limit_attempt("login", identifiers)
 
         return redirect(
             url_for("login")
@@ -988,6 +1201,15 @@ def forgot_password():
             "email",
             "",
         ).strip().lower()
+        identifiers = rate_limit_identifiers(email)
+
+        if is_rate_limited(
+            "password_reset",
+            identifiers,
+            limit=3,
+            window_minutes=30,
+        ):
+            abort(429)
 
         user = User.query.filter_by(
             email=email,
@@ -1028,6 +1250,11 @@ def forgot_password():
                 return redirect(
                     url_for("forgot_password")
                 )
+
+        record_rate_limit_attempt(
+            "password_reset",
+            identifiers,
+        )
 
         flash(
             "If an account with that email exists, "
@@ -1162,6 +1389,17 @@ def register():
             "password",
             "",
         )
+        identifiers = rate_limit_identifiers(email)
+
+        if is_rate_limited(
+            "registration",
+            identifiers,
+            limit=5,
+            window_minutes=60,
+        ):
+            abort(429)
+
+        record_rate_limit_attempt("registration", identifiers)
 
         if (
             len(username) < 2
@@ -1205,6 +1443,7 @@ def register():
 
         db.session.add(new_user)
         db.session.commit()
+        clear_rate_limit_attempts("registration", identifiers)
 
         flash(
             "Registration successful! Please login.",
@@ -2028,6 +2267,14 @@ def chat():
 
     messages = []
 
+    admin_can_reply = (
+        not current_user.is_admin
+        or (
+            active_conversation is not None
+            and active_conversation.assigned_admin_id == current_user.id
+        )
+    )
+
     if active_conversation:
         messages = ChatMessage.query.filter_by(
             conversation_id=active_conversation.id,
@@ -2035,21 +2282,88 @@ def chat():
             ChatMessage.created_at.asc(),
         ).all()
 
-        ChatMessage.query.filter(
-            ChatMessage.conversation_id == active_conversation.id,
-            ChatMessage.sender_id != current_user.id,
-            ChatMessage.is_read.is_(False),
-        ).update(
-            {"is_read": True},
-            synchronize_session=False,
-        )
-        db.session.commit()
+        if admin_can_reply:
+            ChatMessage.query.filter(
+                ChatMessage.conversation_id == active_conversation.id,
+                ChatMessage.sender_id != current_user.id,
+                ChatMessage.is_read.is_(False),
+            ).update(
+                {"is_read": True},
+                synchronize_session=False,
+            )
+            db.session.commit()
 
     return render_template(
         "chat.html",
         conversations=conversations,
         active_conversation=active_conversation,
+        admin_can_reply=admin_can_reply,
         messages=messages,
+    )
+
+
+@app.route(
+    "/chat/<int:conversation_id>/claim",
+    methods=["POST"],
+)
+@admin_required
+def claim_chat_conversation(conversation_id):
+
+    conversation = db.session.get_or_404(
+        ChatConversation,
+        conversation_id,
+    )
+
+    if conversation.assigned_admin_id == current_user.id:
+        flash("This chat is already assigned to you.", "info")
+    elif conversation.assigned_admin_id is not None:
+        flash("Another admin is already attending to this chat.", "danger")
+    else:
+        claimed = ChatConversation.query.filter(
+            ChatConversation.id == conversation.id,
+            ChatConversation.assigned_admin_id.is_(None),
+        ).update(
+            {
+                "assigned_admin_id": current_user.id,
+                "assigned_at": datetime.utcnow(),
+            },
+            synchronize_session=False,
+        )
+
+        if claimed:
+            db.session.commit()
+            flash("You are now attending to this chat.", "success")
+        else:
+            db.session.rollback()
+            flash("Another admin claimed this chat first.", "danger")
+
+    return redirect(
+        url_for("chat", conversation=conversation_id)
+    )
+
+
+@app.route(
+    "/chat/<int:conversation_id>/release",
+    methods=["POST"],
+)
+@admin_required
+def release_chat_conversation(conversation_id):
+
+    conversation = db.session.get_or_404(
+        ChatConversation,
+        conversation_id,
+    )
+
+    if conversation.assigned_admin_id != current_user.id:
+        flash("Only the assigned admin can release this chat.", "danger")
+    else:
+        conversation.assigned_admin_id = None
+        conversation.assigned_at = None
+        db.session.commit()
+        flash("This chat is available for another admin.", "success")
+
+    return redirect(
+        url_for("chat", conversation=conversation_id)
     )
 
 
@@ -2089,6 +2403,18 @@ def send_chat_message():
 
         if conversation is None:
             abort(404)
+
+        if conversation.assigned_admin_id != current_user.id:
+            flash(
+                "Claim this chat before replying.",
+                "danger",
+            )
+            return redirect(
+                url_for(
+                    "chat",
+                    conversation=conversation.id,
+                )
+            )
     else:
         conversation = ChatConversation.query.filter_by(
             user_id=current_user.id,
@@ -2720,6 +3046,17 @@ def toggle_user_status(user_id):
 
     user.is_active = not user.is_active
 
+    if user.is_admin and not user.is_active:
+        ChatConversation.query.filter_by(
+            assigned_admin_id=user.id,
+        ).update(
+            {
+                "assigned_admin_id": None,
+                "assigned_at": None,
+            },
+            synchronize_session=False,
+        )
+
     db.session.commit()
 
     status = (
@@ -2764,6 +3101,8 @@ def ensure_database_schema():
     if db.engine.dialect.name != "sqlite":
         return
 
+    schema_changed = False
+
     ticket_columns = db.session.execute(
         text("PRAGMA table_info(ticket)")
     ).mappings().all()
@@ -2779,6 +3118,37 @@ def ensure_database_schema():
                 "NOT NULL DEFAULT 'Other'"
             )
         )
+        schema_changed = True
+
+    chat_columns = db.session.execute(
+        text("PRAGMA table_info(chat_conversation)")
+    ).mappings().all()
+
+    existing_chat_columns = {
+        column["name"]
+        for column in chat_columns
+    }
+
+    if "assigned_admin_id" not in existing_chat_columns:
+        db.session.execute(
+            text(
+                "ALTER TABLE chat_conversation "
+                "ADD COLUMN assigned_admin_id INTEGER "
+                "REFERENCES user(id)"
+            )
+        )
+        schema_changed = True
+
+    if "assigned_at" not in existing_chat_columns:
+        db.session.execute(
+            text(
+                "ALTER TABLE chat_conversation "
+                "ADD COLUMN assigned_at DATETIME"
+            )
+        )
+        schema_changed = True
+
+    if schema_changed:
         db.session.commit()
 
 
