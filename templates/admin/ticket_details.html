@@ -254,6 +254,39 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
     </form>
 
 </div>
+
+<section class="internal-notes" aria-labelledby="internal-notes-heading">
+    <div class="conversation-header">
+        <h3 id="internal-notes-heading">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            Internal Notes
+        </h3>
+        <p>Visible only to administrators. Staff never receive these notes.</p>
+    </div>
+
+    <div class="internal-note-thread">
+        {% if internal_notes %}
+            {% for note in internal_notes %}
+                <article class="internal-note">
+                    <div class="message-header">
+                        <strong>{{ note.author.username }} <span class="message-role">Admin only</span></strong>
+                        <span>{{ note.created_at|local_datetime('%d %b %Y, %H:%M') }}</span>
+                    </div>
+                    <p>{{ note.message }}</p>
+                </article>
+            {% endfor %}
+        {% else %}
+            <div class="conversation-empty">No internal notes yet.</div>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="{{ url_for('add_ticket_internal_note', ticket_id=ticket.id) }}" class="internal-note-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="internal-note-message">Add private note</label>
+        <textarea id="internal-note-message" name="message" maxlength="2000" rows="3" placeholder="Troubleshooting context, handover details, or next steps..." required></textarea>
+        <button type="submit" class="admin-status-btn"><i class="fa-solid fa-lock" aria-hidden="true"></i> Save Internal Note</button>
+    </form>
+</section>
         <!-- =====================================================
      ADMIN TICKET MANAGEMENT
      ===================================================== -->

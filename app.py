@@ -407,6 +407,22 @@ class TicketReply(db.Model):
         return f"<TicketReply {self.id}>"
 
 
+class TicketInternalNote(db.Model):
+    """Private ticket context visible only to support administrators."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("ticket.id"), nullable=False, index=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    ticket = db.relationship(
+        "Ticket",
+        backref=db.backref("internal_notes", lazy=True, cascade="all, delete-orphan"),
+    )
+    author = db.relationship("User")
+
+
 # -------------------------
 # LIVE CHAT MODELS
 # -------------------------
@@ -1745,10 +1761,15 @@ def ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    internal_notes = TicketInternalNote.query.filter_by(
+        ticket_id=ticket.id,
+    ).order_by(TicketInternalNote.created_at.asc()).all()
+
     return render_template(
         "ticket_details.html",
         ticket=ticket,
         replies=replies,
+        internal_notes=internal_notes,
     )
 
 
@@ -3160,6 +3181,28 @@ def admin_reply_to_ticket(ticket_id):
             ticket_id=ticket.id,
         )
     )
+
+
+@app.route("/admin/ticket/<int:ticket_id>/internal-note", methods=["POST"])
+@admin_required
+def add_ticket_internal_note(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    message = request.form.get("message", "").strip()
+
+    if not message:
+        flash("Internal note cannot be empty.", "danger")
+    elif len(message) > 2000:
+        flash("Keep internal notes below 2,000 characters.", "danger")
+    else:
+        db.session.add(TicketInternalNote(
+            ticket_id=ticket.id,
+            author_id=current_user.id,
+            message=message,
+        ))
+        db.session.commit()
+        flash("Internal note saved. Staff cannot see it.", "success")
+
+    return redirect(url_for("admin_ticket_details", ticket_id=ticket.id))
 
 
 # =========================================================
