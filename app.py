@@ -434,6 +434,18 @@ class TicketTag(db.Model):
     __table_args__ = (db.UniqueConstraint("ticket_id", "name", name="uq_ticket_tag_name"),)
 
 
+class TicketStatusHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    previous_status = db.Column(db.String(20), nullable=False)
+    new_status = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("ticket.id"), nullable=False, index=True)
+    changed_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    ticket = db.relationship("Ticket", backref=db.backref("status_history", lazy=True, cascade="all, delete-orphan"))
+    changed_by = db.relationship("User")
+
+
 # -------------------------
 # LIVE CHAT MODELS
 # -------------------------
@@ -1772,6 +1784,10 @@ def ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    status_history = TicketStatusHistory.query.filter_by(
+        ticket_id=ticket.id,
+    ).order_by(TicketStatusHistory.created_at.desc()).all()
+
     if ticket.due_at is None:
         sla_state = "No due date"
     elif ticket.status == "Resolved":
@@ -1792,6 +1808,7 @@ def ticket_details(ticket_id):
         ticket=ticket,
         replies=replies,
         sla_state=sla_state,
+        status_history=status_history,
         internal_notes=internal_notes,
     )
 
@@ -2999,6 +3016,10 @@ def admin_ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    status_history = TicketStatusHistory.query.filter_by(ticket_id=ticket.id).order_by(
+        TicketStatusHistory.created_at.desc(),
+    ).all()
+
     if ticket.due_at is None:
         sla_state = "No due date"
     elif ticket.status == "Resolved":
@@ -3014,6 +3035,7 @@ def admin_ticket_details(ticket_id):
         "admin/ticket_details.html",
         ticket=ticket,
         replies=replies,
+        status_history=status_history,
         sla_state=sla_state,
     )
 
@@ -3060,6 +3082,14 @@ def admin_update_ticket_status(ticket_id):
     previous_status = ticket.status
 
     ticket.status = new_status
+
+    if previous_status != new_status:
+        db.session.add(TicketStatusHistory(
+            ticket_id=ticket.id,
+            changed_by_id=current_user.id,
+            previous_status=previous_status,
+            new_status=new_status,
+        ))
 
     if (
         new_status == "Resolved"

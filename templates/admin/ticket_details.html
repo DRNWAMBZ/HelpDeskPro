@@ -288,6 +288,25 @@ Ticket HDP-{{ "%04d"|format(ticket.id) }}
     </form>
 </section>
 
+<section class="internal-notes" aria-labelledby="status-history-heading">
+    <div class="conversation-header">
+        <h3 id="status-history-heading"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Status History</h3>
+        <p>Private record of ticket status changes.</p>
+    </div>
+    <div class="internal-note-thread">
+        {% if status_history %}
+            {% for entry in status_history %}
+                <article class="internal-note">
+                    <div class="message-header"><strong>{{ entry.changed_by.username }}</strong><span>{{ entry.created_at|local_datetime('%d %b %Y, %H:%M') }}</span></div>
+                    <p>{{ entry.previous_status }} → {{ entry.new_status }}</p>
+                </article>
+            {% endfor %}
+        {% else %}
+            <div class="conversation-empty">No status changes recorded yet.</div>
+        {% endif %}
+    </div>
+</section>
+
 <section class="internal-notes" aria-labelledby="ticket-tags-heading">
     <div class="conversation-header">
         <h3 id="ticket-tags-heading"><i class="fa-solid fa-tags" aria-hidden="true"></i> Ticket Tags</h3>
