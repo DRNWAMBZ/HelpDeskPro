@@ -229,6 +229,22 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertIn(b"Live chat satisfaction", response.data)
         self.assertIn(b"Network &amp; WiFi", response.data)
 
+        today = datetime.utcnow().date().isoformat()
+        response = admin_client.get(
+            f"/admin?date_from={today}&date_to={today}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Reporting period", response.data)
+        self.assertIn(today.encode(), response.data)
+
+        response = admin_client.get(
+            f"/admin/reports/tickets.csv?date_from={today}&date_to={today}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Ticket number,Subject,Requester", response.data)
+        self.assertIn(b"Overdue router replacement", response.data)
+        self.assertIn(b"attachment; filename=helpdeskpro-tickets", response.headers["Content-Disposition"].encode())
+
         response = admin_client.get("/admin/tickets?due=overdue&sort=ticket_asc")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Overdue router replacement", response.data)

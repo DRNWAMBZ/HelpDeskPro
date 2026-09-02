@@ -6,6 +6,8 @@ from secrets import token_urlsafe
 from pathlib import Path
 from hashlib import sha256
 from email.message import EmailMessage
+from io import StringIO
+import csv
 import logging
 import os
 import smtplib
@@ -23,6 +25,7 @@ from flask import (
     url_for,
     flash,
     send_file,
+    Response,
 )
 
 from flask_sqlalchemy import SQLAlchemy
@@ -1301,6 +1304,50 @@ def save_ticket_attachment(ticket):
     db.session.add(attachment)
 
     return None, destination
+
+
+def get_ticket_report_period(args):
+    """Return date values and SQL filters for a ticket-created date range."""
+
+    date_from = args.get("date_from", "").strip()
+    date_to = args.get("date_to", "").strip()
+    start = None
+    end = None
+
+    try:
+        if date_from:
+            start = datetime.strptime(date_from, "%Y-%m-%d")
+        if date_to:
+            end = datetime.strptime(date_to, "%Y-%m-%d")
+    except ValueError as error:
+        raise ValueError("Choose dates in the format YYYY-MM-DD.") from error
+
+    if start and end and start > end:
+        raise ValueError("The start date must be before the end date.")
+
+    filters = []
+    if start:
+        filters.append(Ticket.created_at >= start)
+    if end:
+        filters.append(Ticket.created_at < end + timedelta(days=1))
+
+    if date_from and date_to:
+        period_label = f"{date_from} to {date_to}"
+    elif date_from:
+        period_label = f"From {date_from}"
+    elif date_to:
+        period_label = f"Up to {date_to}"
+    else:
+        period_label = "All time"
+
+    return date_from, date_to, start, end, filters, period_label
+
+
+def safe_csv_cell(value):
+    """Prevent spreadsheet software treating exported values as formulas."""
+
+    value = "" if value is None else str(value)
+    return f"'{value}" if value.startswith(("=", "+", "-", "@")) else value
 
 
 @app.context_processor
@@ -3042,58 +3089,81 @@ def guest():
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
+    try:
+        (
+            date_from,
+            date_to,
+            report_start,
+            report_end,
+            ticket_filters,
+            report_period_label,
+        ) = get_ticket_report_period(request.args)
+    except ValueError as error:
+        flash(str(error), "danger")
+        return redirect(url_for("admin_dashboard"))
+
     now = datetime.utcnow()
     due_soon_cutoff = now + timedelta(hours=24)
-    total_tickets = Ticket.query.count()
+    ticket_query = Ticket.query.filter(*ticket_filters)
+    total_tickets = ticket_query.count()
 
-    open_tickets = Ticket.query.filter_by(
-        status="Open"
+    open_tickets = ticket_query.filter(
+        Ticket.status == "Open",
     ).count()
 
-    in_progress_tickets = Ticket.query.filter_by(
-        status="In Progress"
+    in_progress_tickets = ticket_query.filter(
+        Ticket.status == "In Progress",
     ).count()
 
-    resolved_tickets = Ticket.query.filter_by(
-        status="Resolved"
+    resolved_tickets = ticket_query.filter(
+        Ticket.status == "Resolved",
     ).count()
 
-    overdue_tickets = Ticket.query.filter(
+    overdue_tickets = ticket_query.filter(
         Ticket.status != "Resolved",
         Ticket.due_at.isnot(None),
         Ticket.due_at < now,
     ).count()
 
-    due_soon_tickets = Ticket.query.filter(
+    due_soon_tickets = ticket_query.filter(
         Ticket.status != "Resolved",
         Ticket.due_at.isnot(None),
         Ticket.due_at >= now,
         Ticket.due_at <= due_soon_cutoff,
     ).count()
 
-    critical_open_tickets = Ticket.query.filter(
+    critical_open_tickets = ticket_query.filter(
         Ticket.priority == "Critical",
         Ticket.status != "Resolved",
     ).count()
 
-    tickets_created_this_week = Ticket.query.filter(
+    tickets_created_this_week = ticket_query.filter(
         Ticket.created_at >= now - timedelta(days=7),
     ).count()
 
     category_breakdown = db.session.query(
         Ticket.category,
         func.count(Ticket.id),
-    ).group_by(Ticket.category).order_by(
+    ).filter(*ticket_filters).group_by(Ticket.category).order_by(
         func.count(Ticket.id).desc(),
         Ticket.category.asc(),
     ).all()
 
-    satisfaction_count = ChatSatisfactionRating.query.count()
-    average_satisfaction = db.session.query(
+    satisfaction_query = ChatSatisfactionRating.query
+    if report_start:
+        satisfaction_query = satisfaction_query.filter(
+            ChatSatisfactionRating.created_at >= report_start,
+        )
+    if report_end:
+        satisfaction_query = satisfaction_query.filter(
+            ChatSatisfactionRating.created_at < report_end + timedelta(days=1),
+        )
+    satisfaction_count = satisfaction_query.count()
+    average_satisfaction = satisfaction_query.with_entities(
         func.avg(ChatSatisfactionRating.rating),
     ).scalar()
 
-    recent_tickets = Ticket.query.order_by(
+    recent_tickets = ticket_query.order_by(
         Ticket.created_at.desc()
     ).limit(10).all()
 
@@ -3111,6 +3181,63 @@ def admin_dashboard():
         satisfaction_count=satisfaction_count,
         average_satisfaction=average_satisfaction,
         recent_tickets=recent_tickets,
+        date_from=date_from,
+        date_to=date_to,
+        report_period_label=report_period_label,
+    )
+
+
+@app.route("/admin/reports/tickets.csv")
+@admin_required
+def export_ticket_report_csv():
+    try:
+        date_from, date_to, _, _, ticket_filters, _ = get_ticket_report_period(
+            request.args,
+        )
+    except ValueError as error:
+        return Response(str(error), status=400, mimetype="text/plain")
+
+    tickets = Ticket.query.filter(*ticket_filters).order_by(
+        Ticket.created_at.desc(),
+    ).all()
+
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "Ticket number",
+        "Subject",
+        "Requester",
+        "Email",
+        "Category",
+        "Priority",
+        "Status",
+        "Created (UTC)",
+        "Due (UTC)",
+    ])
+
+    for ticket in tickets:
+        writer.writerow([
+            ticket.ticket_number,
+            safe_csv_cell(ticket.subject),
+            safe_csv_cell(ticket.user.username),
+            safe_csv_cell(ticket.user.email),
+            safe_csv_cell(ticket.category),
+            ticket.priority,
+            ticket.status,
+            ticket.created_at.strftime("%Y-%m-%d %H:%M") if ticket.created_at else "",
+            ticket.due_at.strftime("%Y-%m-%d %H:%M") if ticket.due_at else "",
+        ])
+
+    filename_start = date_from or "all"
+    filename_end = date_to or "current"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename=helpdeskpro-tickets-{filename_start}-to-{filename_end}.csv"
+            ),
+        },
     )
 
 

@@ -67,6 +67,32 @@ Admin Dashboard
 
     </div>
 
+    <section class="admin-report-controls" aria-label="Report date range">
+        <div>
+            <span class="admin-reporting-eyebrow">Reporting period</span>
+            <strong>{{ report_period_label }}</strong>
+        </div>
+
+        <form method="GET" action="{{ url_for('admin_dashboard') }}" class="admin-report-date-form">
+            <label for="report-date-from">From</label>
+            <input id="report-date-from" type="date" name="date_from" value="{{ date_from }}">
+            <label for="report-date-to">To</label>
+            <input id="report-date-to" type="date" name="date_to" value="{{ date_to }}">
+            <button type="submit" class="admin-filter-btn"><i class="fa-solid fa-filter" aria-hidden="true"></i> Apply</button>
+            {% if date_from or date_to %}
+                <a href="{{ url_for('admin_dashboard') }}" class="admin-clear-filter-btn">All time</a>
+            {% endif %}
+        </form>
+
+        <a
+            href="{{ url_for('export_ticket_report_csv', date_from=date_from, date_to=date_to) }}"
+            class="admin-report-export-btn"
+        >
+            <i class="fa-solid fa-file-csv" aria-hidden="true"></i>
+            Export CSV
+        </a>
+    </section>
+
     <section class="admin-reporting" aria-label="Support reports">
         <div class="admin-reporting-header">
             <div>

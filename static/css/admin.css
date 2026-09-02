@@ -132,6 +132,69 @@
     gap: 16px;
 }
 
+.admin-report-controls {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e1edf7;
+    border-radius: 15px;
+    box-shadow: 0 8px 22px rgba(15, 76, 129, 0.06);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding: 15px 17px;
+}
+
+.admin-report-controls strong {
+    color: #173b5d;
+    font-size: 15px;
+}
+
+.admin-report-date-form {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-report-date-form label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-report-date-form input[type="date"] {
+    border: 1px solid #cadbea;
+    border-radius: 8px;
+    color: #334155;
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 9px;
+}
+
+.admin-report-date-form input[type="date"]:focus {
+    border-color: #1767A8;
+    outline: 3px solid rgba(23, 103, 168, 0.14);
+}
+
+.admin-report-export-btn {
+    align-items: center;
+    background: #eaf6ee;
+    border-radius: 8px;
+    color: #217043;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 800;
+    gap: 7px;
+    padding: 9px 11px;
+    text-decoration: none;
+}
+
+.admin-report-export-btn:hover {
+    background: #d9f0e1;
+}
+
 .admin-reporting {
     margin-bottom: 30px;
 }
@@ -677,6 +740,24 @@
         align-items: flex-start;
         flex-direction: column;
         gap: 8px;
+    }
+
+    .admin-report-controls {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-report-date-form {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-report-date-form input[type="date"],
+    .admin-report-date-form .admin-filter-btn,
+    .admin-report-date-form .admin-clear-filter-btn,
+    .admin-report-export-btn {
+        box-sizing: border-box;
+        width: 100%;
     }
 
     .admin-category-list {
