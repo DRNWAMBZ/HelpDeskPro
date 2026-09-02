@@ -4983,6 +4983,101 @@
     background: #fffaf0;
 }
 
+.ticket-attachments {
+    background: #f8fbff;
+    border: 1px solid #dbeaf7;
+    border-radius: 16px;
+    margin-top: 30px;
+    padding: 24px;
+}
+
+.ticket-attachment-list {
+    display: grid;
+    gap: 9px;
+    list-style: none;
+    margin: 18px 0;
+    padding: 0;
+}
+
+.ticket-attachment-list li {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2edf6;
+    border-radius: 10px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 11px 13px;
+}
+
+.ticket-attachment-list i {
+    color: #1767A8;
+}
+
+.ticket-attachment-list a {
+    color: #0F4C81;
+    font-size: 14px;
+    font-weight: 700;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ticket-attachment-list a:hover {
+    text-decoration: underline;
+}
+
+.ticket-attachment-list span,
+.ticket-attachment-form small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.ticket-attachment-form {
+    display: grid;
+    gap: 9px;
+    margin-top: 16px;
+}
+
+.ticket-attachment-form label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ticket-attachment-controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ticket-attachment-controls input[type="file"] {
+    background: #ffffff;
+    border: 1px solid #cadbea;
+    border-radius: 9px;
+    color: #4b5563;
+    flex: 1 1 230px;
+    font-size: 13px;
+    padding: 8px;
+}
+
+@media (max-width: 650px) {
+    .ticket-attachments {
+        padding: 18px;
+    }
+
+    .ticket-attachment-list li {
+        align-items: flex-start;
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .ticket-attachment-list span {
+        grid-column: 2;
+    }
+}
+
 .internal-note-thread {
     display: flex;
     flex-direction: column;

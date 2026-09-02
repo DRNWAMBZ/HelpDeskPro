@@ -85,6 +85,44 @@
 
     </div>
 
+    <section class="ticket-attachments" aria-labelledby="ticket-attachments-heading">
+        <div class="conversation-header">
+            <h3 id="ticket-attachments-heading">
+                <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                Attachments
+            </h3>
+            <p>Share a screenshot or PDF that helps support understand the issue.</p>
+        </div>
+
+        {% if attachments %}
+            <ul class="ticket-attachment-list">
+                {% for attachment in attachments %}
+                    <li>
+                        <i class="fa-solid {% if attachment.content_type == 'application/pdf' %}fa-file-pdf{% else %}fa-file-image{% endif %}" aria-hidden="true"></i>
+                        <a href="{{ url_for('download_ticket_attachment', attachment_id=attachment.id) }}">
+                            {{ attachment.original_filename }}
+                        </a>
+                        <span>{{ (attachment.file_size / 1024)|round(1) }} KB · {{ attachment.uploaded_at|local_datetime('%d %b %Y, %H:%M') }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="conversation-empty">No attachments yet.</div>
+        {% endif %}
+
+        {% if ticket.status != "Resolved" %}
+            <form method="POST" action="{{ url_for('add_ticket_attachment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="ticket-attachment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label for="ticket-attachment">Add an attachment</label>
+                <div class="ticket-attachment-controls">
+                    <input id="ticket-attachment" type="file" name="attachment" accept=".png,.jpg,.jpeg,.webp,.pdf" required>
+                    <button type="submit" class="secondary-btn"><i class="fa-solid fa-paperclip" aria-hidden="true"></i> Upload</button>
+                </div>
+                <small>PNG, JPEG, WebP, or PDF only · maximum 5 MB · up to 5 files per ticket.</small>
+            </form>
+        {% endif %}
+    </section>
+
 
     <div class="ticket-details-actions">
 

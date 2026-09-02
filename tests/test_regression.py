@@ -1,13 +1,16 @@
 """Critical user and administrator regression checks."""
 
 import os
+import shutil
 import tempfile
 import unittest
 from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
 
 
 TEST_DATABASE_PATH = Path(tempfile.gettempdir()) / "helpdesk-pro-regression.db"
+TEST_ATTACHMENT_DIRECTORY = Path(tempfile.gettempdir()) / "helpdesk-pro-test-attachments"
 
 if TEST_DATABASE_PATH.exists():
     TEST_DATABASE_PATH.unlink()
@@ -24,6 +27,7 @@ from app import (  # noqa: E402
     ChatSatisfactionRating,
     Notification,
     Ticket,
+    TicketAttachment,
     TicketReply,
     User,
     app,
@@ -36,6 +40,8 @@ class HelpDeskRegressionTests(unittest.TestCase):
 
     def setUp(self):
         app.config["TESTING"] = True
+        app.config["TICKET_ATTACHMENT_FOLDER"] = str(TEST_ATTACHMENT_DIRECTORY)
+        shutil.rmtree(TEST_ATTACHMENT_DIRECTORY, ignore_errors=True)
 
         with app.app_context():
             db.drop_all()
@@ -109,6 +115,7 @@ class HelpDeskRegressionTests(unittest.TestCase):
         with app.app_context():
             db.session.remove()
             db.drop_all()
+        shutil.rmtree(TEST_ATTACHMENT_DIRECTORY, ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -242,6 +249,51 @@ class HelpDeskRegressionTests(unittest.TestCase):
         with app.app_context():
             ticket = db.session.get(Ticket, overdue_ticket_id)
             self.assertEqual(ticket.status, "Open")
+
+    def test_ticket_attachment_is_private_and_validated(self):
+        with app.app_context():
+            ticket = Ticket(
+                ticket_number=1,
+                subject="Screenshot needed",
+                description="I need to share a PDF error report.",
+                priority="Medium",
+                category="Software",
+                status="Open",
+                user_id=self.user_id,
+            )
+            db.session.add(ticket)
+            db.session.commit()
+            ticket_id = ticket.id
+
+        owner_client = app.test_client()
+        self.sign_in(owner_client, "staff@example.test")
+        token = self.csrf_token(owner_client, f"/ticket/{ticket_id}")
+        response = owner_client.post(
+            f"/ticket/{ticket_id}/attachments",
+            data={
+                "csrf_token": token,
+                "attachment": (BytesIO(b"%PDF-1.4\nTest attachment"), "error-report.pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 302)
+
+        with app.app_context():
+            attachment = TicketAttachment.query.one()
+            attachment_id = attachment.id
+            self.assertTrue(
+                (TEST_ATTACHMENT_DIRECTORY / attachment.stored_filename).is_file()
+            )
+
+        response = owner_client.get(f"/ticket/attachments/{attachment_id}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, b"%PDF-1.4\nTest attachment")
+        response.close()
+
+        other_user_client = app.test_client()
+        self.sign_in(other_user_client, "fresh-staff@example.test")
+        response = other_user_client.get(f"/ticket/attachments/{attachment_id}")
+        self.assertEqual(response.status_code, 403)
 
     def test_chat_claim_feedback_and_close(self):
         user_client = app.test_client()

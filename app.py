@@ -22,6 +22,7 @@ from flask import (
     session,
     url_for,
     flash,
+    send_file,
 )
 
 from flask_sqlalchemy import SQLAlchemy
@@ -41,6 +42,7 @@ from werkzeug.security import (
     check_password_hash,
 )
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
 
 from PIL import Image, UnidentifiedImageError
 
@@ -123,6 +125,10 @@ app.config["DISPLAY_TIMEZONE"] = os.environ.get(
     "DISPLAY_TIMEZONE",
     "Africa/Lagos",
 )
+app.config["TICKET_ATTACHMENT_FOLDER"] = os.environ.get(
+    "TICKET_ATTACHMENT_FOLDER",
+    str(Path(app.instance_path) / "ticket_attachments"),
+)
 
 KNOWLEDGE_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 KNOWLEDGE_IMAGE_MAX_PIXELS = 25_000_000
@@ -130,6 +136,22 @@ KNOWLEDGE_IMAGE_EXTENSIONS = {
     "JPEG": "jpg",
     "PNG": "png",
     "WEBP": "webp",
+}
+
+TICKET_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024
+TICKET_ATTACHMENT_MAX_PER_TICKET = 5
+TICKET_ATTACHMENT_IMAGE_EXTENSIONS = {
+    "jpg": "JPEG",
+    "jpeg": "JPEG",
+    "png": "PNG",
+    "webp": "WEBP",
+}
+TICKET_ATTACHMENT_MIME_TYPES = {
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp",
+    "pdf": "application/pdf",
 }
 
 TICKET_CATEGORIES = (
@@ -407,6 +429,42 @@ class TicketReply(db.Model):
 
     def __repr__(self):
         return f"<TicketReply {self.id}>"
+
+
+class TicketAttachment(db.Model):
+    """A private file attached to a ticket by its owner or an administrator."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    original_filename = db.Column(db.String(255), nullable=False)
+    stored_filename = db.Column(db.String(255), nullable=False, unique=True)
+    content_type = db.Column(db.String(100), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)
+    uploaded_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+    ticket_id = db.Column(
+        db.Integer,
+        db.ForeignKey("ticket.id"),
+        nullable=False,
+        index=True,
+    )
+    uploaded_by_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+    )
+
+    ticket = db.relationship(
+        "Ticket",
+        backref=db.backref(
+            "attachments",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+    uploaded_by = db.relationship("User")
 
 
 class TicketInternalNote(db.Model):
@@ -1164,6 +1222,87 @@ def add_knowledge_article_image(article):
     return None, destination
 
 
+def save_ticket_attachment(ticket):
+    """Validate and save one private ticket attachment."""
+
+    upload = request.files.get("attachment")
+
+    if not upload or not upload.filename:
+        return "Choose a file to attach.", None
+
+    if len(ticket.attachments) >= TICKET_ATTACHMENT_MAX_PER_TICKET:
+        return (
+            f"A ticket can have at most {TICKET_ATTACHMENT_MAX_PER_TICKET} attachments.",
+            None,
+        )
+
+    original_filename = secure_filename(upload.filename)
+    if not original_filename or "." not in original_filename:
+        return "Choose a PNG, JPEG, WebP, or PDF file.", None
+
+    extension = original_filename.rsplit(".", 1)[1].lower()
+    if extension not in TICKET_ATTACHMENT_MIME_TYPES:
+        return "Only PNG, JPEG, WebP, and PDF files are supported.", None
+
+    try:
+        upload.stream.seek(0, 2)
+        file_size = upload.stream.tell()
+        upload.stream.seek(0)
+    except (AttributeError, OSError):
+        return "The selected file could not be read.", None
+
+    if not file_size:
+        return "The selected file is empty.", None
+    if file_size > TICKET_ATTACHMENT_MAX_BYTES:
+        return "Attachments must be 5 MB or smaller.", None
+
+    if extension in TICKET_ATTACHMENT_IMAGE_EXTENSIONS:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(upload.stream) as image:
+                    image.verify()
+                upload.stream.seek(0)
+                with Image.open(upload.stream) as image:
+                    image_format = image.format
+        except (
+            Image.DecompressionBombWarning,
+            OSError,
+            UnidentifiedImageError,
+        ):
+            return "Upload a valid PNG, JPEG, or WebP image.", None
+
+        if image_format != TICKET_ATTACHMENT_IMAGE_EXTENSIONS[extension]:
+            return "The file extension does not match the uploaded image.", None
+    else:
+        try:
+            if upload.stream.read(5) != b"%PDF-":
+                return "Upload a valid PDF file.", None
+        except OSError:
+            return "The selected file could not be read.", None
+
+    upload_directory = Path(app.config["TICKET_ATTACHMENT_FOLDER"])
+    upload_directory.mkdir(parents=True, exist_ok=True)
+
+    stored_filename = f"ticket-{ticket.id}-{token_urlsafe(12)}.{extension}"
+    destination = upload_directory / stored_filename
+
+    upload.stream.seek(0)
+    upload.save(destination)
+
+    attachment = TicketAttachment(
+        ticket_id=ticket.id,
+        uploaded_by_id=current_user.id,
+        original_filename=original_filename[:255],
+        stored_filename=stored_filename,
+        content_type=TICKET_ATTACHMENT_MIME_TYPES[extension],
+        file_size=file_size,
+    )
+    db.session.add(attachment)
+
+    return None, destination
+
+
 @app.context_processor
 def inject_notification_count():
 
@@ -1784,6 +1923,10 @@ def ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    attachments = TicketAttachment.query.filter_by(
+        ticket_id=ticket.id,
+    ).order_by(TicketAttachment.uploaded_at.desc()).all()
+
     status_history = TicketStatusHistory.query.filter_by(
         ticket_id=ticket.id,
     ).order_by(TicketStatusHistory.created_at.desc()).all()
@@ -1807,6 +1950,7 @@ def ticket_details(ticket_id):
         "ticket_details.html",
         ticket=ticket,
         replies=replies,
+        attachments=attachments,
         sla_state=sla_state,
         status_history=status_history,
         internal_notes=internal_notes,
@@ -1913,6 +2057,72 @@ def reply_to_ticket(ticket_id):
             "ticket_details",
             ticket_id=ticket.id,
         )
+    )
+
+
+@app.route("/ticket/<int:ticket_id>/attachments", methods=["POST"])
+@login_required
+def add_ticket_attachment(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    detail_endpoint = (
+        "admin_ticket_details"
+        if current_user.is_admin
+        else "ticket_details"
+    )
+
+    if not current_user.is_admin and ticket.user_id != current_user.id:
+        flash("You do not have permission to attach files to this ticket.", "danger")
+        return redirect(url_for("tickets"))
+
+    if not current_user.is_admin and ticket.status == "Resolved":
+        flash("Resolved tickets are read-only for staff users.", "danger")
+        return redirect(url_for(detail_endpoint, ticket_id=ticket.id))
+
+    error, destination = save_ticket_attachment(ticket)
+    if error:
+        flash(error, "danger")
+        return redirect(url_for(detail_endpoint, ticket_id=ticket.id))
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        if destination:
+            destination.unlink(missing_ok=True)
+        app.logger.exception("Could not save ticket attachment metadata.")
+        flash("The attachment could not be saved. Please try again.", "danger")
+        return redirect(url_for(detail_endpoint, ticket_id=ticket.id))
+
+    if not current_user.is_admin:
+        for admin in User.query.filter_by(is_admin=True, is_active=True).all():
+            create_notification(
+                recipient_id=admin.id,
+                ticket_id=ticket.id,
+                message=f"{current_user.username} added an attachment to a support request.",
+            )
+        db.session.commit()
+
+    flash("Attachment added.", "success")
+    return redirect(url_for(detail_endpoint, ticket_id=ticket.id))
+
+
+@app.route("/ticket/attachments/<int:attachment_id>")
+@login_required
+def download_ticket_attachment(attachment_id):
+    attachment = TicketAttachment.query.get_or_404(attachment_id)
+
+    if not current_user.is_admin and attachment.ticket.user_id != current_user.id:
+        abort(403)
+
+    path = Path(app.config["TICKET_ATTACHMENT_FOLDER"]) / attachment.stored_filename
+    if not path.is_file():
+        abort(404)
+
+    return send_file(
+        path,
+        mimetype=attachment.content_type,
+        as_attachment=True,
+        download_name=attachment.original_filename,
     )
 # -------------------------
 # USER SETTINGS
@@ -3101,6 +3311,10 @@ def admin_ticket_details(ticket_id):
         TicketReply.created_at.asc()
     ).all()
 
+    attachments = TicketAttachment.query.filter_by(
+        ticket_id=ticket.id,
+    ).order_by(TicketAttachment.uploaded_at.desc()).all()
+
     status_history = TicketStatusHistory.query.filter_by(ticket_id=ticket.id).order_by(
         TicketStatusHistory.created_at.desc(),
     ).all()
@@ -3120,6 +3334,7 @@ def admin_ticket_details(ticket_id):
         "admin/ticket_details.html",
         ticket=ticket,
         replies=replies,
+        attachments=attachments,
         status_history=status_history,
         sla_state=sla_state,
     )
