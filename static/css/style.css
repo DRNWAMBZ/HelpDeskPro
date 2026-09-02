@@ -1451,8 +1451,8 @@ button:hover{
 .marketing-contact-actions, .marketing-footer > div { display: flex; align-items: center; }
 
 .marketing-brand { gap: 11px; color: #103f6c; text-decoration: none; }
-.marketing-brand-mark { display: grid; width: 39px; height: 39px; place-items: center; overflow: hidden; border-radius: 12px; box-shadow: 0 7px 16px rgba(15, 76, 129, .2); }
-.marketing-brand-mark img { width: 100%; height: 100%; object-fit: cover; }
+.marketing-brand-mark { display: grid; width: 42px; height: 42px; place-items: center; overflow: hidden; }
+.marketing-brand-mark img { width: 100%; height: 100%; object-fit: contain; }
 .marketing-brand strong, .marketing-brand small { display: block; }
 .marketing-brand strong { font-family: Georgia, serif; font-size: 15px; letter-spacing: .04em; }
 .marketing-brand small { margin-top: 2px; color: #688198; font-size: 11px; font-weight: 700; }
@@ -1461,6 +1461,7 @@ button:hover{
 .marketing-nav a, .marketing-login-link, .marketing-footer a { color: #516b83; font-size: 14px; font-weight: 700; text-decoration: none; }
 .marketing-nav a:hover, .marketing-login-link:hover, .marketing-footer a:hover { color: #0f4c81; }
 .marketing-header-actions { gap: 18px; }
+.marketing-mobile-toggle, .marketing-mobile-search, .marketing-mobile-nav-actions, .marketing-mobile-home { display: none; }
 
 .marketing-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 47px; padding: 0 20px; border: 1px solid #0f4c81; border-radius: 10px; background: #0f4c81; color: #fff; font-size: 14px; font-weight: 800; text-decoration: none; box-shadow: 0 8px 17px rgba(15, 76, 129, .16); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
 .marketing-button:hover { background: #0b3c67; color: #fff; box-shadow: 0 11px 22px rgba(15, 76, 129, .24); transform: translateY(-2px); }
@@ -1522,6 +1523,16 @@ button:hover{
     50% { transform: translateY(-9px); }
 }
 
+@keyframes marketing-status-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(57, 170, 112, .35); }
+    55% { box-shadow: 0 0 0 5px rgba(57, 170, 112, 0); }
+}
+
+@keyframes marketing-mobile-card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .marketing-hero-copy, .marketing-hero-visual, .marketing-visual-main,
     .marketing-visual-chat, .marketing-visual-knowledge, .marketing-service-card {
@@ -1529,6 +1540,123 @@ button:hover{
     }
 
     .marketing-button, .marketing-service-card, .marketing-brand-mark {
+        transition: none;
+    }
+}
+
+/* Mobile-first marketing layout: retain the full product story without trying to
+   squeeze desktop navigation and multi-column panels into a narrow viewport. */
+@media (max-width: 900px) {
+    .marketing-header { gap: 18px; padding: 13px 24px; }
+    .marketing-hero { grid-template-columns: 1fr; gap: 36px; min-height: 0; padding: 64px 32px 54px; }
+    .marketing-hero-copy { max-width: 720px; }
+    .marketing-hero-visual { max-width: 660px; width: 100%; }
+    .marketing-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .marketing-workflow { grid-template-columns: 1fr; gap: 34px; }
+    .marketing-footer { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+    .marketing-header { justify-content: center; min-height: 64px; padding: 10px 16px; position: relative; }
+    .marketing-brand { gap: 8px; }
+    .marketing-brand-mark { height: 38px; width: 38px; }
+    .marketing-brand strong { font-size: 14px; }
+    .marketing-brand small { font-size: 10px; }
+    .marketing-header-actions { display: none; }
+    .marketing-mobile-toggle, .marketing-mobile-search { align-items: center; background: #f4f8fc; border: 1px solid #d8e6f1; border-radius: 12px; color: #124e80; display: inline-flex; font: inherit; height: 42px; justify-content: center; padding: 0; position: absolute; text-decoration: none; top: 11px; transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; width: 42px; }
+    .marketing-mobile-toggle span, .marketing-mobile-search span { display: none; }
+    .marketing-mobile-toggle { cursor: pointer; left: 16px; }
+    .marketing-mobile-search { right: 16px; }
+    .marketing-mobile-toggle:hover, .marketing-mobile-search:hover { background: #e5f1fa; border-color: #b9d2e6; box-shadow: 0 5px 13px rgba(15,76,129,.11); color: #103f6c; transform: translateY(-1px); }
+    .marketing-mobile-toggle:focus-visible, .marketing-mobile-search:focus-visible { box-shadow: 0 0 0 3px rgba(31,132,201,.25); outline: 0; }
+    .marketing-nav { background: #ffffff; border-bottom: 1px solid #dce8f2; box-shadow: 0 18px 30px rgba(24, 67, 103, .12); display: none; flex-direction: column; gap: 0; left: 0; padding: 10px 16px 16px; position: absolute; right: 0; top: 64px; z-index: 20; }
+    .marketing-header.is-mobile-open .marketing-nav { display: flex; }
+    .marketing-nav > a { border-radius: 10px; padding: 13px 12px; }
+    .marketing-mobile-nav-actions { border-top: 1px solid #e3edf5; display: grid; gap: 9px; margin-top: 8px; padding-top: 16px; }
+    .marketing-mobile-nav-actions > a:first-child { color: #0f4c81; font-size: 14px; font-weight: 800; padding: 11px 12px; text-decoration: none; }
+    .marketing-mobile-nav-actions .marketing-button { width: 100%; }
+
+    .marketing-hero { gap: 28px; padding: 40px 20px 44px; text-align: center; }
+    .marketing-hero-copy { margin: 0 auto; }
+    .marketing-eyebrow { font-size: 10px; letter-spacing: .05em; }
+    .marketing-hero h1 { margin: 13px 0; font-size: clamp(35px, 10vw, 45px); line-height: 1.07; }
+    .marketing-hero p, .marketing-section p { font-size: 15px; line-height: 1.62; }
+    .marketing-hero-actions { align-items: stretch; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .marketing-hero-actions .marketing-button { width: 100%; }
+    .marketing-trust-list { justify-content: center; gap: 9px 14px; margin-top: 23px; font-size: 12px; }
+
+    .marketing-hero-visual { min-height: 310px; border-radius: 24px; }
+    .marketing-visual-main { left: 8%; top: 47px; width: 84%; padding: 20px; text-align: left; }
+    .marketing-visual-main h2 { margin-top: 18px; font-size: 21px; }
+    .marketing-visual-chat { bottom: 58px; right: 5%; }
+    .marketing-visual-knowledge { bottom: 16px; left: 5%; }
+    .marketing-visual-float { padding: 10px 12px; font-size: 12px; }
+
+    .marketing-section { padding: 58px 20px; }
+    .marketing-section h2 { margin: 13px 0; font-size: 31px; }
+    .marketing-service-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 28px; }
+    .marketing-service-card { align-items: center; display: grid; grid-template-columns: 48px 1fr auto; column-gap: 14px; min-height: 0; padding: 17px; }
+    .marketing-service-icon { grid-row: span 2; width: 44px; height: 44px; }
+    .marketing-service-card h3 { margin: 0; font-size: 16px; }
+    .marketing-service-card p { grid-column: 2 / -1; min-height: 0; margin: 4px 0 0; font-size: 13px; }
+    .marketing-service-card > span:last-child { grid-column: 3; grid-row: 1; font-size: 0; }
+    .marketing-service-card > span:last-child i { font-size: 13px; margin: 0; }
+
+    .marketing-workflow { gap: 26px; }
+    .marketing-workflow-list { gap: 10px; }
+    .marketing-workflow-list li { gap: 13px; padding: 16px; }
+    .marketing-contact { align-items: stretch; flex-direction: column; gap: 24px; margin-bottom: 56px; margin-top: 26px; padding: 28px 24px; }
+    .marketing-contact-actions { align-items: stretch; min-width: 0; }
+    .marketing-contact .marketing-button { width: 100%; }
+    .marketing-contact-link { text-align: center; }
+    .marketing-footer { grid-template-columns: 1fr; gap: 15px; padding: 28px 20px; text-align: center; }
+    .marketing-footer-brand { align-items: center !important; }
+    .marketing-footer > div:nth-child(3) { justify-content: center; }
+
+    .marketing-hero, .marketing-services, .marketing-workflow, .marketing-contact { display: none; }
+    .marketing-mobile-home { display: block; min-height: calc(100dvh - 64px); padding: 31px 20px 38px; }
+    .marketing-mobile-intro { animation: marketing-rise-in .45s ease-out both; }
+    .marketing-mobile-status { align-items: center; background: #e7f6ed; border-radius: 999px; color: #1d7d50; display: inline-flex; font-size: 11px; font-weight: 800; gap: 7px; padding: 7px 10px; }
+    .marketing-mobile-status i { animation: marketing-status-pulse 2.2s ease-out infinite; border-radius: 50%; color: #39aa70; font-size: 8px; }
+    .marketing-mobile-kicker { color: #5d7890; font-size: 12px !important; font-weight: 800; letter-spacing: .05em; margin: 21px 0 7px !important; text-transform: uppercase; }
+    .marketing-mobile-intro h1 { color: #133f67; font-family: Georgia, serif; font-size: clamp(33px, 9vw, 42px); letter-spacing: -.045em; line-height: 1.06; margin: 0; }
+    .marketing-mobile-intro > p:last-child { color: #617a90; font-size: 15px; line-height: 1.56; margin: 13px 0 0; }
+    .marketing-mobile-search-form { align-items: center; background: #ffffff; border: 1px solid #d9e6f0; border-radius: 15px; box-shadow: 0 8px 24px rgba(19,63,103,.08); display: flex; gap: 10px; margin: 28px 0 19px; min-height: 56px; padding: 0 9px 0 16px; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .marketing-mobile-search-form:focus-within { border-color: #85b9dc; box-shadow: 0 10px 27px rgba(19,63,103,.14); transform: translateY(-1px); }
+    .marketing-mobile-search-form > i { color: #547790; }
+    .marketing-mobile-search-form input { background: transparent; border: 0; color: #173b5d; flex: 1; font: inherit; font-size: 15px; min-width: 0; outline: 0; }
+    .marketing-mobile-search-form input::placeholder { color: #8195a6; }
+    .marketing-mobile-search-form button { align-items: center; background: #0f4c81; border: 0; border-radius: 11px; color: #ffffff; cursor: pointer; display: inline-flex; height: 38px; justify-content: center; transition: background .2s ease, transform .2s ease; width: 38px; }
+    .marketing-mobile-search-form button:hover { background: #0b3c67; transform: translateX(2px); }
+    .marketing-mobile-action-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .marketing-mobile-action { animation: marketing-mobile-card-in .45s ease-out both; background: #ffffff; border: 1px solid #dce7f0; border-radius: 17px; color: #173b5d; min-height: 146px; padding: 17px 14px; text-decoration: none; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .marketing-mobile-action:nth-child(1) { animation-delay: .06s; }
+    .marketing-mobile-action:nth-child(2) { animation-delay: .12s; }
+    .marketing-mobile-action:nth-child(3) { animation-delay: .18s; }
+    .marketing-mobile-action:nth-child(4) { animation-delay: .24s; }
+    .marketing-mobile-action:hover { border-color: #bad3e5; box-shadow: 0 10px 20px rgba(17,70,109,.1); transform: translateY(-2px); }
+    .marketing-mobile-action:active { background: #eff6fb; transform: scale(.985); }
+    .marketing-mobile-action span { align-items: center; background: #edf5fc; border-radius: 11px; color: #1a5d94; display: inline-flex; height: 38px; justify-content: center; width: 38px; }
+    .marketing-mobile-action-primary { background: #0f4c81; border-color: #0f4c81; color: #ffffff; box-shadow: 0 11px 22px rgba(15,76,129,.2); }
+    .marketing-mobile-action-primary span { background: rgba(255,255,255,.15); color: #ffffff; }
+    .marketing-mobile-action strong, .marketing-mobile-action small { display: block; }
+    .marketing-mobile-action strong { font-size: 15px; margin-top: 17px; }
+    .marketing-mobile-action small { color: #6d8397; font-size: 12px; line-height: 1.35; margin-top: 5px; }
+    .marketing-mobile-action-primary small { color: #c6ddec; }
+    .marketing-mobile-reassurance { align-items: flex-start; background: #edf6fb; border-radius: 15px; color: #214f77; display: flex; gap: 12px; margin-top: 20px; padding: 16px; }
+    .marketing-mobile-reassurance > i { color: #1a6aa5; margin-top: 2px; }
+    .marketing-mobile-reassurance strong, .marketing-mobile-reassurance span { display: block; }
+    .marketing-mobile-reassurance strong { font-size: 13px; }
+    .marketing-mobile-reassurance span { color: #647f95; font-size: 12px; line-height: 1.42; margin-top: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marketing-mobile-intro, .marketing-mobile-status i, .marketing-mobile-action {
+        animation: none;
+    }
+
+    .marketing-mobile-toggle, .marketing-mobile-search, .marketing-mobile-search-form,
+    .marketing-mobile-search-form button, .marketing-mobile-action {
         transition: none;
     }
 }

@@ -8,6 +8,14 @@ Dashboard
 
 <div class="user-dashboard admin-page">
 
+    <section class="mobile-dashboard-top mobile-dashboard-welcome" aria-label="Welcome to HelpDesk Pro">
+        <div class="mobile-welcome-orb"><span></span><img src="{{ url_for('static', filename='images/drn-tech-badge.png') }}" alt="DRN TECH"></div>
+        <p class="mobile-welcome-eyebrow">DRN TECH HELPDESK</p>
+        <h1>Welcome back, {{ current_user.username }}.</h1>
+        <p class="mobile-welcome-copy">Your support workspace is ready whenever you need it.</p>
+        <span class="mobile-welcome-status"><i class="fa-solid fa-circle" aria-hidden="true"></i> Support is ready</span>
+    </section>
+
     <section class="dashboard-welcome admin-header">
 
         <div class="welcome-text">

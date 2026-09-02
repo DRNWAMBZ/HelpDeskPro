@@ -12,7 +12,7 @@ This file is the project checkpoint record. Update it whenever a phase reaches a
 | 3 | Reports, CSV export, validation, email notification setup | Complete |
 | 4 | Email updates, pagination, efficient live-chat refresh | Complete |
 
-## Current milestone — Phase 5: Desktop UI polish
+## Current milestone — Phase 5: UI polish and responsive design
 
 **Goal:** Give the whole product a cohesive, modern desktop experience before the dedicated mobile pass.
 
@@ -21,14 +21,18 @@ This file is the project checkpoint record. Update it whenever a phase reaches a
 - [x] Shared sidebar and favicon updated with the DRN TECH shield mark.
 - [x] User dashboard aligned with the current admin dashboard's card, icon, spacing, and colour system.
 - [x] Admin dashboard visual polish and final consistency pass.
-- [ ] Ticket-management and ticket-detail page polish.
-- [ ] Knowledge base, chat, notification, guest Wi-Fi, and settings page polish.
-- [ ] Cross-page desktop review.
-- [ ] Dedicated mobile and responsive-layout pass.
+- [x] Ticket-management and ticket-detail page polish.
+- [x] Knowledge base, chat, notification, guest Wi-Fi, and settings page polish.
+- [ ] Cross-page desktop review and user acceptance test.
+- [ ] Dedicated mobile and responsive-layout pass — in progress.
+  - [x] Compact, secure mobile app header: menu on the left, help search on the right, centred brand.
+  - [x] Mobile dashboard navigation: focused first view with a fixed primary-action bar for users and admins.
+  - [ ] Mobile dashboard, ticket, chat, and settings layout review across common phone widths.
+  - [ ] Mobile user acceptance test on real iPhone and Android browsers.
 
 ### Current position
 
-**User and admin dashboard desktop polish are complete.** The next item is the ticket-management and ticket-detail experience, followed by the remaining product pages.
+**Desktop polish is implemented and the mobile pass is now in progress.** The mobile shell and home page have been redesigned for narrow screens; the remaining work is a page-by-page touch, spacing, and real-device review.
 
 ## Later work
 

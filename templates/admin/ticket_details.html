@@ -8,11 +8,11 @@ Ticket #{{ ticket.ticket_number }}
 
 <div class="admin-page">
 
-    <div class="admin-header">
+    <div class="admin-header admin-ticket-detail-header">
 
         <div>
 
-            <span class="ticket-number">
+            <span class="admin-header-eyebrow ticket-number">
                 Ticket #{{ ticket.ticket_number }}
             </span>
 
@@ -26,7 +26,7 @@ Ticket #{{ ticket.ticket_number }}
 
         <a
             href="{{ url_for('admin_tickets') }}"
-            class="secondary-action-btn"
+            class="admin-header-queue-btn"
         >
             <i class="fa-solid fa-arrow-left"></i>
             All Tickets
@@ -35,7 +35,7 @@ Ticket #{{ ticket.ticket_number }}
     </div>
 
 
-    <div class="admin-card">
+    <div class="admin-card admin-ticket-overview">
 
         <div class="ticket-details-meta">
 
@@ -116,20 +116,17 @@ Ticket #{{ ticket.ticket_number }}
  SUPPORT CONVERSATION
 ===================================================== -->
 
-<div class="ticket-conversation">
+<details class="ticket-conversation admin-ticket-section admin-ticket-conversation-section collapsible-ticket-conversation">
 
-    <div class="conversation-header">
+    <summary class="collapsible-ticket-summary">
+        <span>
+            <strong><i class="fa-solid fa-comments" aria-hidden="true"></i> Conversation</strong>
+            <small>Communicate directly with the user about this issue.</small>
+        </span>
+        <i class="fa-solid fa-chevron-down collapsible-ticket-chevron" aria-hidden="true"></i>
+    </summary>
 
-        <h3>
-            <i class="fa-solid fa-comments"></i>
-            Conversation
-        </h3>
-
-        <p>
-            Communicate directly with the user about this issue.
-        </p>
-
-    </div>
+    <div class="collapsible-ticket-content">
 
 
     <div class="conversation-thread">
@@ -253,9 +250,10 @@ Ticket #{{ ticket.ticket_number }}
         ></textarea>
     </form>
 
-</div>
+    </div>
+</details>
 
-<section class="ticket-attachments" aria-labelledby="ticket-attachments-heading">
+<section class="ticket-attachments admin-ticket-section" aria-labelledby="ticket-attachments-heading">
     <div class="conversation-header">
         <h3 id="ticket-attachments-heading"><i class="fa-solid fa-paperclip" aria-hidden="true"></i> Attachments</h3>
         <p>Private ticket evidence. Only the ticket owner and administrators can download these files.</p>
@@ -286,7 +284,7 @@ Ticket #{{ ticket.ticket_number }}
     </form>
 </section>
 
-<section class="internal-notes" aria-labelledby="internal-notes-heading">
+<section class="internal-notes admin-ticket-section admin-ticket-private-panel" aria-labelledby="internal-notes-heading">
     <div class="conversation-header">
         <h3 id="internal-notes-heading">
             <i class="fa-solid fa-lock" aria-hidden="true"></i>
@@ -319,7 +317,7 @@ Ticket #{{ ticket.ticket_number }}
     </form>
 </section>
 
-<section class="internal-notes" aria-labelledby="status-history-heading">
+<section class="internal-notes admin-ticket-section admin-ticket-history-panel" aria-labelledby="status-history-heading">
     <div class="conversation-header">
         <h3 id="status-history-heading"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Status History</h3>
         <p>Private record of ticket status changes.</p>
@@ -338,7 +336,7 @@ Ticket #{{ ticket.ticket_number }}
     </div>
 </section>
 
-<section class="internal-notes" aria-labelledby="ticket-tags-heading">
+<section class="internal-notes admin-ticket-section admin-ticket-tags-panel" aria-labelledby="ticket-tags-heading">
     <div class="conversation-header">
         <h3 id="ticket-tags-heading"><i class="fa-solid fa-tags" aria-hidden="true"></i> Ticket Tags</h3>
         <p>Private labels that help administrators group related support work.</p>
@@ -354,7 +352,7 @@ Ticket #{{ ticket.ticket_number }}
      ADMIN TICKET MANAGEMENT
      ===================================================== -->
 
-<div class="admin-ticket-management">
+<div class="admin-ticket-management admin-ticket-control-panel">
 
     <div class="admin-ticket-management-header">
 

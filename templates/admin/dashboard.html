@@ -8,6 +8,14 @@ Admin Dashboard
 
 <div class="admin-page">
 
+    <section class="mobile-dashboard-top mobile-dashboard-welcome mobile-dashboard-admin-welcome" aria-label="Administrator overview">
+        <div class="mobile-welcome-orb"><span></span><img src="{{ url_for('static', filename='images/drn-tech-badge.png') }}" alt="DRN TECH"></div>
+        <p class="mobile-welcome-eyebrow">SUPPORT OPERATIONS</p>
+        <h1>Good to see you, {{ current_user.username }}.</h1>
+        <p class="mobile-welcome-copy">Your queue, reports, and team tools are one tap away.</p>
+        <span class="mobile-welcome-status"><i class="fa-solid fa-circle" aria-hidden="true"></i> Administrator workspace ready</span>
+    </section>
+
     <div class="admin-header">
         <div>
             <span class="admin-header-eyebrow">OPERATIONS OVERVIEW</span>
@@ -79,27 +87,29 @@ Admin Dashboard
             <strong>{{ report_period_label }}</strong>
         </div>
 
-        <form method="GET" action="{{ url_for('admin_dashboard') }}" class="admin-report-date-form">
-            <label for="report-date-from">From</label>
-            <input id="report-date-from" type="date" name="date_from" value="{{ date_from }}">
-            <label for="report-date-to">To</label>
-            <input id="report-date-to" type="date" name="date_to" value="{{ date_to }}">
-            <button type="submit" class="admin-filter-btn"><i class="fa-solid fa-filter" aria-hidden="true"></i> Apply</button>
-            {% if date_from or date_to %}
-                <a href="{{ url_for('admin_dashboard') }}" class="admin-clear-filter-btn">All time</a>
-            {% endif %}
-        </form>
+        <div class="admin-report-actions">
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="admin-report-date-form">
+                <label for="report-date-from">From</label>
+                <input id="report-date-from" type="date" name="date_from" value="{{ date_from }}">
+                <label for="report-date-to">To</label>
+                <input id="report-date-to" type="date" name="date_to" value="{{ date_to }}">
+                <button type="submit" class="admin-filter-btn"><i class="fa-solid fa-filter" aria-hidden="true"></i> Apply</button>
+                {% if date_from or date_to %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="admin-clear-filter-btn">All time</a>
+                {% endif %}
+            </form>
 
-        <a
-            href="{{ url_for('export_ticket_report_csv', date_from=date_from, date_to=date_to) }}"
-            class="admin-report-export-btn"
-        >
-            <i class="fa-solid fa-file-csv" aria-hidden="true"></i>
-            Export CSV
-        </a>
+            <a
+                href="{{ url_for('export_ticket_report_csv', date_from=date_from, date_to=date_to) }}"
+                class="admin-report-export-btn"
+            >
+                <i class="fa-solid fa-file-csv" aria-hidden="true"></i>
+                Export CSV
+            </a>
+        </div>
     </section>
 
-    <section class="admin-reporting" aria-label="Support reports">
+    <section class="admin-reporting" id="mobile-dashboard-insights" aria-label="Support reports">
         <div class="admin-reporting-header">
             <div>
                 <span class="admin-reporting-eyebrow">Support snapshot</span>

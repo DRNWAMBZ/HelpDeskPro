@@ -63,9 +63,9 @@
 .sidebar-brand-mark img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transform: scale(1.04);
-    clip-path: polygon(50% 0%, 96% 27%, 96% 70%, 50% 100%, 4% 70%, 4% 27%);
+    object-fit: contain;
+    transform: none;
+    clip-path: none;
 }
 
 /* Shared desktop dashboard polish. */
@@ -4604,6 +4604,479 @@
     }
 }
 
+/* Final mobile navigation precedence. */
+@media (max-width: 700px) {
+    .main-content { padding-bottom: 92px; }
+    .sidebar-nav { max-height: calc(100dvh - 142px); }
+    .user-dashboard .welcome-action,
+    .admin-page:not(.user-dashboard) .admin-header-actions { width: auto; }
+}
+
+@keyframes mobile-welcome-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mobile-welcome-orbit {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(6deg); }
+}
+
+/* Mobile dashboard top layer — a title, useful actions, and identity rather
+   than a second, crowded desktop header. */
+.mobile-dashboard-top { display: none; }
+
+@media (max-width: 700px) {
+    .mobile-dashboard-top { display: block; margin: -2px 0 20px; }
+    .mobile-dashboard-topbar { align-items: center; display: flex; justify-content: space-between; }
+    .mobile-dashboard-topbar > div:first-child > span { color: #6c8498; display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em; margin-bottom: 3px; }
+    .mobile-dashboard-topbar h1 { color: #153f66; font-size: 29px; letter-spacing: -.04em; line-height: 1; margin: 0; }
+    .mobile-dashboard-top-actions { display: flex; gap: 9px; }
+    .mobile-dashboard-icon-button { align-items: center; background: #f2f7fb; border: 1px solid #dce9f2; border-radius: 12px; color: #155487; display: inline-flex; height: 42px; justify-content: center; position: relative; text-decoration: none; transition: background .2s ease, box-shadow .2s ease, transform .2s ease; width: 42px; }
+    .mobile-dashboard-icon-button:hover { background: #e5f1f9; box-shadow: 0 7px 15px rgba(15,76,129,.1); transform: translateY(-1px); }
+    .mobile-dashboard-icon-button b { align-items: center; background: #d84c50; border: 2px solid #f5f8fc; border-radius: 99px; color: #fff; display: inline-flex; font-size: 9px; height: 17px; justify-content: center; min-width: 17px; padding: 0 4px; position: absolute; right: -5px; top: -5px; }
+    .mobile-dashboard-profile-strip { align-items: center; background: #fff; border: 1px solid #dce8f1; border-radius: 18px; box-shadow: 0 9px 21px rgba(15,76,129,.07); display: flex; gap: 13px; margin-top: 17px; min-height: 84px; padding: 12px 14px; }
+    .mobile-dashboard-avatar { align-items: center; background: #e8f2fa; border-radius: 50%; display: inline-flex; flex: 0 0 auto; height: 55px; justify-content: center; overflow: hidden; width: 55px; }
+    .mobile-dashboard-avatar img { height: 46px; object-fit: contain; width: 46px; }
+    .mobile-dashboard-profile-strip > div { min-width: 0; }
+    .mobile-dashboard-profile-strip small, .mobile-dashboard-profile-strip strong, .mobile-dashboard-profile-strip span { display: block; }
+    .mobile-dashboard-profile-strip small { color: #748ba0; font-size: 11px; font-weight: 700; }
+    .mobile-dashboard-profile-strip strong { color: #173f62; font-size: 16px; margin: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-dashboard-profile-strip > div > span { color: #668096; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-dashboard-profile-strip > a { align-items: center; background: #f1f7fb; border-radius: 50%; color: #1a5d94; display: inline-flex; flex: 0 0 auto; height: 33px; justify-content: center; margin-left: auto; text-decoration: none; width: 33px; }
+    .mobile-dashboard-admin-strip { background: linear-gradient(135deg, #f7fbfe, #ebf4fb); }
+    .mobile-dashboard-top + .dashboard-welcome,
+    .mobile-dashboard-top + .admin-header { display: none; }
+}
+
+/* Mobile dashboard shell: primary work stays one thumb tap away, while the
+   complete desktop information set remains available below the first view. */
+.mobile-tabbar { display: none; }
+
+@media (max-width: 700px) {
+    .mobile-tabbar {
+        align-items: stretch;
+        background: rgba(255, 255, 255, .96);
+        border-top: 1px solid #dce8f1;
+        bottom: 0;
+        box-shadow: 0 -8px 24px rgba(15, 58, 92, .10);
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        left: 0;
+        min-height: 70px;
+        padding: 7px 8px max(7px, env(safe-area-inset-bottom));
+        position: fixed;
+        right: 0;
+        z-index: 1100;
+    }
+
+    .mobile-tabbar-link {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #6e8294;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 750;
+        gap: 4px;
+        justify-content: center;
+        min-width: 0;
+        padding: 0 3px;
+        text-decoration: none;
+    }
+
+    .mobile-tabbar-link > i { font-size: 17px; line-height: 1; }
+    .mobile-tabbar-link.is-active { color: #0f4c81; }
+    .mobile-tabbar-link.is-active > i { color: #0f4c81; }
+    .mobile-tabbar-create > i {
+        align-items: center;
+        background: #0f4c81;
+        border-radius: 14px;
+        box-shadow: 0 7px 15px rgba(15, 76, 129, .23);
+        color: #fff;
+        display: flex;
+        height: 36px;
+        justify-content: center;
+        margin-top: -16px;
+        width: 48px;
+    }
+
+    .mobile-tabbar-create.is-active > i {
+        background: #0f4c81 !important;
+        color: #ffffff !important;
+    }
+
+    .mobile-tabbar-create > span { font-size: 9px; white-space: nowrap; }
+
+    .mobile-tabbar-link:active { transform: scale(.94); }
+    .main-content { padding-bottom: 92px; }
+    .sidebar-nav { max-height: calc(100dvh - 142px); }
+
+    .user-dashboard .dashboard-welcome,
+    .admin-page:not(.user-dashboard) .admin-header { margin-bottom: 19px; }
+    .user-dashboard .welcome-label,
+    .admin-page:not(.user-dashboard) .admin-header-eyebrow { font-size: 10px; }
+    .user-dashboard .welcome-text h1,
+    .admin-page:not(.user-dashboard) .admin-header h1 { font-size: 25px; line-height: 1.1; }
+    .user-dashboard .welcome-text p,
+    .admin-page:not(.user-dashboard) .admin-header p { font-size: 14px; line-height: 1.5; }
+    .user-dashboard .welcome-action .admin-badge,
+    .admin-page:not(.user-dashboard) .admin-header .admin-badge { display: none; }
+    .user-dashboard .welcome-action,
+    .admin-page:not(.user-dashboard) .admin-header-actions { width: auto; }
+    .user-dashboard .welcome-action .admin-header-queue-btn,
+    .admin-page:not(.user-dashboard) .admin-header-actions .admin-header-queue-btn { min-height: 42px; }
+
+    .user-dashboard .ticket-statistics,
+    .admin-page:not(.user-dashboard) .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 20px; }
+    .user-dashboard .ticket-statistics .admin-stat-total,
+    .user-dashboard .ticket-statistics .admin-stat-resolved,
+    .admin-page:not(.user-dashboard) .admin-stats .admin-stat-total,
+    .admin-page:not(.user-dashboard) .admin-stats .admin-stat-resolved { display: none; }
+    .user-dashboard .ticket-statistics .admin-stat-card,
+    .admin-page:not(.user-dashboard) .admin-stats .admin-stat-card { min-height: 89px; padding: 14px; }
+    .user-dashboard .ticket-statistics .admin-stat-icon,
+    .admin-page:not(.user-dashboard) .admin-stats .admin-stat-icon { height: 34px; width: 34px; }
+
+    .user-dashboard .quick-actions-card,
+    .user-dashboard .support-banner { display: none; }
+    .user-dashboard .dashboard-grid { display: block; margin-bottom: 0; }
+    .user-dashboard .recent-tickets-card { margin-bottom: 0; }
+    .user-dashboard .recent-tickets-card .card-header { margin-bottom: 15px; }
+
+    .admin-page:not(.user-dashboard) .admin-report-controls { margin-bottom: 18px; padding: 13px 14px; }
+    .admin-page:not(.user-dashboard) .admin-report-date-form,
+    .admin-page:not(.user-dashboard) .admin-report-export-btn { display: none; }
+    .admin-page:not(.user-dashboard) .admin-report-controls > div:first-child { width: 100%; }
+    .admin-page:not(.user-dashboard) .admin-reporting-header { margin-bottom: 15px; }
+    .admin-page:not(.user-dashboard) .admin-report-grid { gap: 12px; }
+    .admin-page:not(.user-dashboard) .admin-report-card { padding: 18px; }
+}
+
+/* =========================================================
+   PHASE 5 — MOBILE SUPPORT WORKSPACE
+   ========================================================= */
+
+.sidebar-mobile-toggle, .sidebar-mobile-search, .mobile-help-search { display: none; }
+
+@media (max-width: 700px) {
+    .sidebar {
+        height: auto;
+        overflow: visible;
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+    }
+
+    .sidebar-brand {
+        margin: 0;
+    }
+
+    .sidebar-mobile-toggle {
+        align-items: center;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .24);
+        border-radius: 10px;
+        color: #ffffff;
+        cursor: pointer;
+        display: inline-flex;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 13px;
+        position: absolute;
+        right: 16px;
+        top: 13px;
+    }
+
+    .sidebar-nav {
+        display: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 14px;
+    }
+
+    .sidebar.is-mobile-open .sidebar-nav { display: grid; }
+
+    .sidebar-nav-link {
+        min-height: 46px;
+        padding: 9px 10px;
+    }
+
+    .main-content { padding: 16px; }
+    .user-dashboard, .admin-page, .tickets-page, .ticket-details-page { padding: 20px 16px; }
+
+    .admin-header, .dashboard-welcome, .tickets-header, .notifications-header,
+    .settings-header, .chat-page-header { gap: 14px; }
+
+    .admin-header-actions, .welcome-action { width: 100%; }
+    .admin-header-actions > *, .welcome-action > * { flex: 1 1 auto; justify-content: center; }
+
+    .admin-stats, .ticket-statistics { gap: 12px; }
+    .admin-stat-card, .stat-card { min-height: 84px; padding: 17px; }
+
+    .admin-report-controls, .admin-report-actions, .knowledge-search-form,
+    .guest-wifi-support-callout { align-items: stretch; }
+
+    .admin-report-actions, .knowledge-search-form { flex-direction: column; }
+    .admin-report-actions > *, .knowledge-search-form > * { width: 100%; }
+
+    .chat-workspace { min-height: 62vh; }
+    .chat-workspace-admin { grid-template-columns: 1fr; }
+    .chat-inbox { max-height: 260px; }
+    .chat-panel-header, .chat-page-header { align-items: flex-start; flex-direction: column; }
+    .chat-refresh-status { align-self: flex-start; }
+    .chat-composer { flex-direction: column; }
+    .chat-send-button { width: 100%; }
+
+    .knowledge-grid, .guest-wifi-layout, .guest-wifi-help-grid { grid-template-columns: 1fr; }
+    .settings-layout { grid-template-columns: 1fr; }
+    .settings-navigation { display: flex; flex-wrap: wrap; gap: 8px; }
+    .settings-nav-title { flex-basis: 100%; }
+    .settings-nav-link { flex: 1 1 135px; }
+}
+
+@media (max-width: 420px) {
+    .sidebar-nav { grid-template-columns: 1fr; }
+    .sidebar-brand-copy strong { font-size: 14px; }
+    .admin-header-queue-btn, .admin-badge { font-size: 12px; }
+    .ticket-details-meta { gap: 16px; }
+}
+
+/* Phase 5 ticket-workspace consistency pass. */
+.admin-ticket-filter-form {
+    border-color: #dce9f4;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, .07);
+    padding: 20px;
+}
+
+.admin-ticket-status-card {
+    border-radius: 18px;
+    margin-bottom: 20px;
+    transition: box-shadow .22s ease, transform .22s ease;
+}
+
+.admin-ticket-status-card:hover {
+    box-shadow: 0 13px 30px rgba(15, 76, 129, .10);
+    transform: translateY(-2px);
+}
+
+.admin-ticket-status-card .admin-card-header {
+    align-items: center;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    padding-bottom: 17px;
+}
+
+.admin-ticket-status-card .admin-card-header h2 {
+    color: #173b5d;
+    font-size: 19px;
+    margin: 0 0 4px;
+}
+
+.admin-ticket-status-card .admin-card-header p {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 0;
+}
+
+.user-ticket-list-full .user-ticket-list-item,
+.admin-ticket-list-item {
+    border-radius: 12px;
+    margin: 3px 0;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.ticket-details-page {
+    max-width: 1380px;
+    padding: 30px;
+}
+
+.ticket-details-header,
+.ticket-details-meta,
+.ticket-description,
+.ticket-attachments,
+.ticket-conversation,
+.internal-notes,
+.ticket-details-card,
+.admin-card {
+    background: #ffffff;
+    border: 1px solid #e7eff7;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, .08);
+}
+
+.ticket-details-header { border-radius: 18px; padding: 25px; }
+.ticket-details-meta { border-radius: 16px; gap: 28px 48px; margin-top: 20px; padding: 22px 25px; }
+.ticket-description, .ticket-attachments, .ticket-conversation, .internal-notes { border-radius: 16px; margin-top: 20px; padding: 25px; }
+.ticket-details-actions { border-top: 0; margin-top: 20px; padding-top: 0; }
+
+.collapsible-ticket-conversation {
+    padding: 0;
+}
+
+.collapsible-ticket-summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    padding: 20px 24px;
+}
+
+.collapsible-ticket-summary::-webkit-details-marker { display: none; }
+
+.collapsible-ticket-summary strong,
+.collapsible-ticket-summary small { display: block; }
+.collapsible-ticket-summary strong { color: #173b5d; font-size: 16px; }
+.collapsible-ticket-summary strong i { color: #1767a8; margin-right: 8px; }
+.collapsible-ticket-summary small { color: #6b7280; font-size: 12px; margin-top: 4px; }
+.collapsible-ticket-chevron { color: #1767a8; transition: transform .2s ease; }
+.collapsible-ticket-conversation[open] .collapsible-ticket-chevron { transform: rotate(180deg); }
+.collapsible-ticket-content { border-top: 1px solid #edf2f7; padding: 22px 24px 24px; }
+
+/* Final supporting-page overrides. */
+.knowledge-page, .knowledge-article-page, .chat-page, .notifications-page, .guest-wifi-page, .settings-page { max-width: 1380px; }
+.knowledge-card, .knowledge-article-body, .chat-inbox, .chat-panel, .notification-card, .guest-wifi-card, .guest-wifi-troubleshooting, .settings-navigation, .settings-panel { border-color: #e1ebf4; box-shadow: 0 8px 25px rgba(15, 76, 129, .07); }
+.knowledge-card, .guest-wifi-card, .notification-card { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.knowledge-card:hover, .guest-wifi-card:hover, .notification-card:hover { border-color: #c8ddec; box-shadow: 0 13px 30px rgba(15, 76, 129, .10); transform: translateY(-2px); }
+.chat-page-header, .knowledge-hero, .notifications-header, .settings-header { border-bottom: 1px solid #dfe9f2; }
+
+/* Phase 5 remaining support-tool pages. */
+.knowledge-page,
+.knowledge-article-page,
+.chat-page,
+.notifications-page,
+.guest-wifi-page,
+.settings-page {
+    max-width: 1380px;
+}
+
+.knowledge-card,
+.knowledge-article-body,
+.chat-inbox,
+.chat-panel,
+.notification-card,
+.guest-wifi-card,
+.guest-wifi-troubleshooting,
+.settings-navigation,
+.settings-panel {
+    border-color: #e1ebf4;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, .07);
+}
+
+.knowledge-card,
+.guest-wifi-card,
+.notification-card {
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.knowledge-card:hover,
+.guest-wifi-card:hover,
+.notification-card:hover {
+    border-color: #c8ddec;
+    box-shadow: 0 13px 30px rgba(15, 76, 129, .10);
+    transform: translateY(-2px);
+}
+
+.chat-page-header,
+.knowledge-hero,
+.notifications-header,
+.settings-header {
+    border-bottom: 1px solid #dfe9f2;
+}
+
+@media (max-width: 600px) {
+    .ticket-details-page { padding: 20px; }
+    .ticket-details-header, .ticket-details-meta, .ticket-description, .ticket-attachments, .ticket-conversation, .internal-notes { padding: 20px; }
+}
+
+/* =========================================================
+   PHASE 5 — TICKET DETAIL SURFACE
+   ========================================================= */
+
+.ticket-details-page {
+    max-width: 1380px;
+    padding: 30px;
+}
+
+.ticket-details-header,
+.ticket-details-meta,
+.ticket-description,
+.ticket-attachments,
+.ticket-conversation,
+.internal-notes,
+.ticket-details-card,
+.admin-card {
+    background: #ffffff;
+    border: 1px solid #e7eff7;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, 0.08);
+}
+
+.ticket-details-header {
+    border-radius: 18px;
+    padding: 25px;
+}
+
+.ticket-details-header h1 {
+    color: #173b5d;
+    letter-spacing: -0.02em;
+}
+
+.ticket-details-meta {
+    border-radius: 16px;
+    gap: 28px 48px;
+    margin-top: 20px;
+    padding: 22px 25px;
+}
+
+.ticket-description,
+.ticket-attachments,
+.ticket-conversation,
+.internal-notes {
+    border-radius: 16px;
+    margin-top: 20px;
+    padding: 25px;
+}
+
+.ticket-description {
+    border-top: 1px solid #e7eff7;
+}
+
+.ticket-details-actions {
+    border-top: 0;
+    margin-top: 20px;
+    padding-top: 0;
+}
+
+.ticket-attachment-list li,
+.conversation-message,
+.internal-note {
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .ticket-details-page {
+        padding: 20px;
+    }
+
+    .ticket-details-header,
+    .ticket-details-meta,
+    .ticket-description,
+    .ticket-attachments,
+    .ticket-conversation,
+    .internal-notes {
+        padding: 20px;
+    }
+}
+
 
 /* =========================================================
    USER DASHBOARD — ADMIN-ALIGNED DESKTOP FINISH
@@ -5899,6 +6372,235 @@ html {
     }
 
 }
+
+/* Dashboard-only phone navigation: the bottom bar owns navigation, while the
+   sidebar becomes an overlay opened by More. */
+@media (max-width: 700px) {
+    body:has(.user-dashboard) .sidebar,
+    body:has(.admin-page) .sidebar {
+        background: transparent;
+        box-shadow: none;
+        height: 0;
+        min-height: 0;
+        overflow: visible;
+        padding: 0;
+        pointer-events: none;
+        position: fixed;
+        top: 0;
+        width: 100%;
+    }
+
+    body:has(.user-dashboard) .sidebar-brand,
+    body:has(.admin-page) .sidebar-brand,
+    body:has(.user-dashboard) .sidebar-mobile-toggle,
+    body:has(.admin-page) .sidebar-mobile-toggle,
+    body:has(.user-dashboard) .sidebar-mobile-search,
+    body:has(.admin-page) .sidebar-mobile-search,
+    body:has(.user-dashboard) .mobile-help-search,
+    body:has(.admin-page) .mobile-help-search { display: none; }
+
+    body:has(.user-dashboard) .sidebar.is-mobile-open,
+    body:has(.admin-page) .sidebar.is-mobile-open { pointer-events: auto; }
+
+    body:has(.user-dashboard) .sidebar-nav,
+    body:has(.admin-page) .sidebar-nav { display: none; }
+
+    body:has(.user-dashboard) .sidebar.is-mobile-open .sidebar-nav,
+    body:has(.admin-page) .sidebar.is-mobile-open .sidebar-nav {
+        background: linear-gradient(160deg, #073052, #0f4c81);
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 18px;
+        box-shadow: 0 19px 38px rgba(3, 37, 65, .26);
+        display: grid;
+        margin: 12px;
+        max-height: calc(100dvh - 106px);
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    body:has(.user-dashboard) .main-content,
+    body:has(.admin-page) .main-content { padding-top: 20px; }
+
+    .user-dashboard .recent-tickets-card {
+        animation: mobile-welcome-rise .55s .13s ease-out both;
+        border-radius: 22px;
+        box-shadow: 0 14px 30px rgba(15,76,129,.11);
+        margin: 0 auto;
+        max-width: 440px;
+        overflow: hidden;
+    }
+
+    .user-dashboard .recent-tickets-card .card-header {
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .user-dashboard .recent-tickets-card .card-header p { margin-left: auto; margin-right: auto; }
+    .user-dashboard .empty-dashboard { padding: 20px 12px 5px; text-align: center; }
+}
+
+/* One consistent mobile application shell for every authenticated page. */
+@media (max-width: 700px) {
+    .sidebar {
+        background: transparent;
+        box-shadow: none;
+        height: 0;
+        min-height: 0;
+        overflow: visible;
+        padding: 0;
+        pointer-events: none;
+        position: fixed;
+        top: 0;
+        width: 100%;
+    }
+
+    .sidebar-brand, .sidebar-mobile-toggle, .sidebar-mobile-search, .mobile-help-search { display: none; }
+    .sidebar.is-mobile-open .sidebar-mobile-toggle,
+    .sidebar.is-mobile-open .sidebar-mobile-search,
+    .sidebar.is-mobile-open .mobile-help-search { display: none !important; }
+    .sidebar-nav { display: none; }
+    .sidebar.is-mobile-open { pointer-events: auto; }
+    .sidebar.is-mobile-open .sidebar-nav {
+        background: linear-gradient(160deg, #073052, #0f4c81);
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 18px;
+        box-shadow: 0 19px 38px rgba(3,37,65,.26);
+        display: grid;
+        margin: 12px;
+        max-height: calc(100dvh - 106px);
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        overflow-x: clip;
+        padding: 20px 16px 92px;
+    }
+
+    .ticket-form-page, .chat-page, .knowledge-page, .knowledge-article-page,
+    .notifications-page, .guest-wifi-page, .settings-page, .tickets-page,
+    .ticket-details-page, .admin-page {
+        box-sizing: border-box;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ticket-form-page, .chat-page, .knowledge-page, .knowledge-article-page,
+    .notifications-page, .guest-wifi-page, .settings-page { padding-left: 0; padding-right: 0; }
+    .chat-page-header, .ticket-form-header, .knowledge-hero, .notifications-header,
+    .settings-header, .tickets-header { margin-top: 0; }
+}
+
+/* The fixed tab bar is the visual end of every phone page. Keep all content,
+   including submit controls and the final chat message, safely above it. */
+@media (max-width: 700px) {
+    .main-content {
+        padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+        scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom));
+    }
+
+    .mobile-tabbar { min-height: 72px; }
+}
+
+/* Final mobile navigation precedence — must remain at the end of this file. */
+@media (max-width: 700px) {
+    .main-content { padding-bottom: 92px; }
+    .sidebar-nav { max-height: calc(100dvh - 142px); }
+    .user-dashboard .welcome-action,
+    .admin-page:not(.user-dashboard) .admin-header-actions { width: auto; }
+}
+
+/* Final mobile dashboard composition. */
+@media (max-width: 700px) {
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .sidebar, .main-content, .user-dashboard, .admin-page, .mobile-tabbar { max-width: 100%; min-width: 0; }
+    .main-content { overflow-x: clip; }
+
+    .mobile-dashboard-top { display: block; margin: 4px 0 25px; text-align: center; }
+    .mobile-dashboard-topbar, .mobile-dashboard-profile-strip { display: none; }
+    .mobile-dashboard-welcome { animation: mobile-welcome-rise .5s ease-out both; padding: 11px 12px 6px; }
+    .mobile-welcome-orb { align-items: center; display: inline-flex; height: 82px; justify-content: center; margin-bottom: 15px; position: relative; width: 82px; }
+    .mobile-welcome-orb > span { animation: mobile-welcome-orbit 4.2s ease-in-out infinite; border: 2px solid #b8d7ed; border-radius: 50%; height: 76px; position: absolute; width: 76px; }
+    .mobile-welcome-orb::after { background: #dceef9; border-radius: 50%; content: ""; height: 61px; position: absolute; width: 61px; }
+    .mobile-welcome-orb img { height: 51px; position: relative; width: 51px; z-index: 1; }
+    .mobile-welcome-eyebrow { color: #5f829d; font-size: 10px; font-weight: 850; letter-spacing: .1em; margin: 0 0 7px; }
+    .mobile-dashboard-welcome h1 { color: #143f67; font-size: clamp(26px, 7.3vw, 32px); letter-spacing: -.045em; line-height: 1.08; margin: 0 auto; max-width: 330px; }
+    .mobile-welcome-copy { color: #648096; font-size: 14px; line-height: 1.55; margin: 10px auto 14px; max-width: 290px; }
+    .mobile-welcome-status { align-items: center; background: #e8f6ed; border-radius: 999px; color: #287d53; display: inline-flex; font-size: 11px; font-weight: 800; gap: 7px; padding: 7px 10px; }
+    .mobile-welcome-status i { color: #36a86d; font-size: 8px; }
+    .mobile-dashboard-admin-welcome .mobile-welcome-status { background: #e8f1f8; color: #21618f; }
+
+    .mobile-dashboard-top + .dashboard-welcome,
+    .mobile-dashboard-top + .admin-header,
+    .user-dashboard .ticket-statistics,
+    .admin-page:not(.user-dashboard) .admin-stats { display: none; }
+    .user-dashboard .dashboard-grid { margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-dashboard-welcome, .mobile-welcome-orb > span { animation: none; }
+}
+
+/* Final mobile overrides — intentionally last. */
+@media (max-width: 700px) {
+    .sidebar { height: auto; overflow: visible; padding: 12px 16px; position: sticky; top: 0; }
+    .sidebar-brand { margin: 0 auto; width: max-content; }
+    .sidebar-mobile-toggle, .sidebar-mobile-search { align-items: center; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.24); border-radius: 10px; color: #fff; cursor: pointer; display: inline-flex; font: inherit; font-size: 13px; font-weight: 700; gap: 8px; min-height: 42px; padding: 0 13px; position: absolute; text-decoration: none; top: 13px; }
+    .sidebar-mobile-toggle { left: 16px; right: auto; }
+    .sidebar-mobile-search { left: auto; right: 16px; }
+    .sidebar-mobile-toggle:hover, .sidebar-mobile-search:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .sidebar-nav { display: none; grid-template-columns: 1fr; margin-top: 14px; max-height: calc(100dvh - 68px); overflow-y: auto; }
+    .sidebar.is-mobile-open .sidebar-nav { display: grid; }
+    .sidebar.is-mobile-search-open .sidebar-nav { display: none; }
+    .mobile-help-search { display: none; gap: 8px; margin-top: 14px; }
+    .sidebar.is-mobile-search-open .mobile-help-search { display: flex; }
+    .mobile-help-search input { appearance: none; background: #fff; border: 1px solid rgba(255,255,255,.28); border-radius: 11px; flex: 1 1 auto; font: inherit; min-height: 46px; min-width: 0; padding: 0 14px; }
+    .mobile-help-search input:focus { border-color: #8ed4ff; box-shadow: 0 0 0 3px rgba(142,212,255,.25); outline: none; }
+    .mobile-help-search button { background: #fff; border: 0; border-radius: 11px; color: #0f4c81; cursor: pointer; min-width: 46px; }
+    .sidebar-nav-link { min-height: 48px; padding: 10px 12px; }
+    .main-content { padding: 16px; }
+    .user-dashboard, .admin-page, .tickets-page, .ticket-details-page { padding: 20px 16px; }
+    .admin-header, .dashboard-welcome, .tickets-header, .notifications-header, .settings-header, .chat-page-header { gap: 14px; }
+    .admin-header-actions, .welcome-action { width: 100%; }
+    .admin-header-actions > *, .welcome-action > * { flex: 1 1 auto; justify-content: center; }
+    .admin-stats, .ticket-statistics { gap: 12px; }
+    .admin-stat-card, .stat-card { min-height: 84px; padding: 17px; }
+    .admin-report-controls, .admin-report-actions, .knowledge-search-form, .guest-wifi-support-callout { align-items: stretch; }
+    .admin-report-actions, .knowledge-search-form { flex-direction: column; }
+    .admin-report-actions > *, .knowledge-search-form > * { width: 100%; }
+    .chat-workspace { min-height: 62vh; }
+    .chat-workspace-admin { grid-template-columns: 1fr; }
+    .chat-inbox { max-height: 260px; }
+    .chat-panel-header, .chat-page-header { align-items: flex-start; flex-direction: column; }
+    .chat-refresh-status { align-self: flex-start; }
+    .chat-composer { flex-direction: column; }
+    .chat-send-button { width: 100%; }
+    .knowledge-grid, .guest-wifi-layout, .guest-wifi-help-grid, .settings-layout { grid-template-columns: 1fr; }
+    .settings-navigation { display: flex; flex-wrap: wrap; gap: 8px; }
+    .settings-nav-title { flex-basis: 100%; }
+    .settings-nav-link { flex: 1 1 135px; }
+}
+@media (max-width: 600px) { .sidebar-mobile-toggle span, .sidebar-mobile-search span { display: none; } .sidebar-mobile-toggle, .sidebar-mobile-search { justify-content: center; padding: 0; width: 42px; } }
+@media (max-width: 420px) { .sidebar-brand-copy { display: none; } .admin-header-queue-btn, .admin-badge { font-size: 12px; } .ticket-details-meta { gap: 16px; } }
+
+/* Final ticket-workspace overrides: kept last so every ticket page shares them. */
+.admin-ticket-filter-form { border-color: #dce9f4; border-radius: 18px; box-shadow: 0 8px 25px rgba(15, 76, 129, .07); padding: 20px; }
+.admin-ticket-status-card { border-radius: 18px; margin-bottom: 20px; transition: box-shadow .22s ease, transform .22s ease; }
+.admin-ticket-status-card:hover { box-shadow: 0 13px 30px rgba(15, 76, 129, .10); transform: translateY(-2px); }
+.admin-ticket-status-card .admin-card-header { align-items: center; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; margin-bottom: 4px; padding-bottom: 17px; }
+.admin-ticket-status-card .admin-card-header h2 { color: #173b5d; font-size: 19px; margin: 0 0 4px; }
+.admin-ticket-status-card .admin-card-header p { color: #6b7280; font-size: 13px; margin: 0; }
+.user-ticket-list-full .user-ticket-list-item, .admin-ticket-list-item { border-radius: 12px; margin: 3px 0; padding-left: 12px; padding-right: 12px; }
+.ticket-details-page { max-width: 1380px; padding: 30px; }
+.ticket-details-header, .ticket-details-meta, .ticket-description, .ticket-attachments, .ticket-conversation, .internal-notes, .ticket-details-card, .admin-card { background: #ffffff; border: 1px solid #e7eff7; box-shadow: 0 8px 25px rgba(15, 76, 129, .08); }
+.ticket-details-header { border-radius: 18px; padding: 25px; }
+.ticket-details-meta { border-radius: 16px; gap: 28px 48px; margin-top: 20px; padding: 22px 25px; }
+.ticket-description, .ticket-attachments, .ticket-conversation, .internal-notes { border-radius: 16px; margin-top: 20px; padding: 25px; }
+.ticket-details-actions { border-top: 0; margin-top: 20px; padding-top: 0; }
 
 
 @media (max-width: 600px) {

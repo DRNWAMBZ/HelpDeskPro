@@ -7,7 +7,7 @@
 <link
     rel="icon"
     type="image/png"
-    href="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}"
+    href="{{ url_for('static', filename='images/favicon.png') }}"
 >
 
 <link
@@ -30,7 +30,7 @@
 
     <div class="sidebar-brand">
         <div class="sidebar-brand-mark">
-            <img src="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}" alt="">
+            <img src="{{ url_for('static', filename='images/drn-tech-badge.png') }}" alt="DRN TECH">
         </div>
 
         <div class="sidebar-brand-copy">
@@ -39,8 +39,29 @@
         </div>
     </div>
 
+    <button class="sidebar-mobile-toggle" type="button" aria-expanded="false" aria-controls="app-navigation">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        <span data-mobile-menu-label>Menu</span>
+    </button>
 
-    <nav class="sidebar-nav" aria-label="Main navigation">
+    <button
+        class="sidebar-mobile-search"
+        type="button"
+        aria-controls="mobile-help-search"
+        aria-expanded="false"
+        aria-label="Search help articles"
+    >
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <span>Search</span>
+    </button>
+
+    <form class="mobile-help-search" id="mobile-help-search" method="GET" action="{{ url_for('knowledge') }}" role="search">
+        <label class="sr-only" for="mobile-help-search-input">Search help articles</label>
+        <input id="mobile-help-search-input" type="search" name="search" placeholder="Search help articles" autocomplete="off">
+        <button type="submit" aria-label="Submit help search"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+    </form>
+
+    <nav class="sidebar-nav" id="app-navigation" aria-label="Main navigation">
 
         {% if current_user.is_authenticated and current_user.is_admin %}
 
@@ -202,6 +223,40 @@
 
 </aside>
 
+{% if current_user.is_authenticated %}
+    <nav class="mobile-tabbar" aria-label="Primary mobile navigation">
+        {% if current_user.is_admin %}
+            <a href="{{ url_for('admin_dashboard') }}" class="mobile-tabbar-link {% if request.endpoint == 'admin_dashboard' %}is-active{% endif %}" {% if request.endpoint == 'admin_dashboard' %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span>
+            </a>
+            <a href="{{ url_for('admin_tickets') }}" class="mobile-tabbar-link {% if request.endpoint in ['admin_tickets', 'admin_ticket_details'] %}is-active{% endif %}" {% if request.endpoint in ['admin_tickets', 'admin_ticket_details'] %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-inbox" aria-hidden="true"></i><span>Queue</span>
+            </a>
+            <a href="{{ url_for('chat') }}" class="mobile-tabbar-link {% if request.endpoint in ['chat', 'send_chat_message'] %}is-active{% endif %}" {% if request.endpoint in ['chat', 'send_chat_message'] %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-comments" aria-hidden="true"></i><span>Chat</span>
+            </a>
+            <a href="{{ url_for('admin_dashboard') }}#mobile-dashboard-insights" class="mobile-tabbar-link">
+                <i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Reports</span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('dashboard') }}" class="mobile-tabbar-link {% if request.endpoint == 'dashboard' %}is-active{% endif %}" {% if request.endpoint == 'dashboard' %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span>
+            </a>
+            <a href="{{ url_for('tickets') }}" class="mobile-tabbar-link {% if request.endpoint in ['tickets', 'ticket_details'] %}is-active{% endif %}" {% if request.endpoint in ['tickets', 'ticket_details'] %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-ticket" aria-hidden="true"></i><span>Tickets</span>
+            </a>
+            <a href="{{ url_for('create_ticket') }}" class="mobile-tabbar-link mobile-tabbar-create {% if request.endpoint == 'create_ticket' %}is-active{% endif %}" {% if request.endpoint == 'create_ticket' %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Create ticket</span>
+            </a>
+            <a href="{{ url_for('chat') }}" class="mobile-tabbar-link {% if request.endpoint in ['chat', 'send_chat_message'] %}is-active{% endif %}" {% if request.endpoint in ['chat', 'send_chat_message'] %}aria-current="page"{% endif %}>
+                <i class="fa-solid fa-comments" aria-hidden="true"></i><span>Chat</span>
+            </a>
+        {% endif %}
+        <button class="mobile-tabbar-link mobile-tabbar-more" type="button" aria-label="Open more navigation options">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i><span>More</span>
+        </button>
+    </nav>
+{% endif %}
 
 <!-- Main Content -->
 
@@ -233,3 +288,5 @@
     {% endblock %}
 
 </main>
+
+<script src="{{ url_for('static', filename='js/mobile-nav.js') }}" defer></script>

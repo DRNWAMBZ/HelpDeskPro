@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DRN TECH | HelpDesk Pro</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body class="marketing-page">
     <header class="marketing-header">
+        <button class="marketing-mobile-toggle" type="button" aria-expanded="false" aria-controls="marketing-navigation">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i><span data-marketing-menu-label>Menu</span>
+        </button>
         <a href="{{ url_for('home') }}" class="marketing-brand" aria-label="DRN TECH home">
-            <span class="marketing-brand-mark"><img src="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}" alt=""></span>
+            <span class="marketing-brand-mark"><img src="{{ url_for('static', filename='images/drn-tech-badge.png') }}" alt=""></span>
             <span><strong>DRN TECH</strong><small>HelpDesk Pro</small></span>
         </a>
-        <nav class="marketing-nav" aria-label="Main navigation">
+        <a class="marketing-mobile-search" href="{{ url_for('knowledge') }}" aria-label="Search the knowledge base"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Search</span></a>
+        <nav class="marketing-nav" id="marketing-navigation" aria-label="Main navigation">
             <a href="#services">Services</a><a href="#how-it-works">How it works</a><a href="#contact">Contact</a><a href="{{ url_for('guest') }}">Guest WiFi</a>
+            <div class="marketing-mobile-nav-actions"><a href="{{ url_for('login') }}">Sign in</a><a href="{{ url_for('register') }}" class="marketing-button marketing-button-small">Create account</a></div>
         </nav>
         <div class="marketing-header-actions">
             <a href="{{ url_for('login') }}" class="marketing-login-link">Sign in</a>
@@ -24,6 +29,45 @@
     </header>
 
     <main>
+        <section class="marketing-mobile-home" aria-label="HelpDesk Pro quick actions">
+            <div class="marketing-mobile-intro">
+                <span class="marketing-mobile-status"><i class="fa-solid fa-circle" aria-hidden="true"></i> HelpDesk Pro is ready</span>
+                {% if current_user.is_authenticated %}
+                    <p class="marketing-mobile-kicker">Welcome back</p>
+                    <h1>What do you need help with?</h1>
+                    <p>Choose a support path and keep track of every update in one place.</p>
+                {% else %}
+                    <p class="marketing-mobile-kicker">DRN TECH support</p>
+                    <h1>Support, without the runaround.</h1>
+                    <p>Raise requests, find answers, and speak to the IT team from one secure workspace.</p>
+                {% endif %}
+            </div>
+
+            <form class="marketing-mobile-search-form" action="{{ url_for('knowledge') }}" method="GET" role="search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <label class="sr-only" for="marketing-help-search">Search support articles</label>
+                <input id="marketing-help-search" type="search" name="search" placeholder="Search for help">
+                <button type="submit" aria-label="Search"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            </form>
+
+            <div class="marketing-mobile-action-grid">
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="marketing-mobile-action marketing-mobile-action-primary"><span><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><strong>Dashboard</strong><small>See the support queue</small></a>
+                    <a href="{{ url_for('admin_tickets') }}" class="marketing-mobile-action"><span><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><strong>Ticket queue</strong><small>Review open requests</small></a>
+                {% else %}
+                    <a href="{{ url_for('create_ticket') }}" class="marketing-mobile-action marketing-mobile-action-primary"><span><i class="fa-solid fa-plus" aria-hidden="true"></i></span><strong>New request</strong><small>Tell us what happened</small></a>
+                    <a href="{{ url_for('tickets') }}" class="marketing-mobile-action"><span><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><strong>My tickets</strong><small>Track support updates</small></a>
+                {% endif %}
+                <a href="{{ url_for('chat') }}" class="marketing-mobile-action"><span><i class="fa-solid fa-comments" aria-hidden="true"></i></span><strong>Live chat</strong><small>Talk to support</small></a>
+                <a href="{{ url_for('knowledge') }}" class="marketing-mobile-action"><span><i class="fa-solid fa-book-open" aria-hidden="true"></i></span><strong>Help centre</strong><small>Find a quick answer</small></a>
+            </div>
+
+            <div class="marketing-mobile-reassurance">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <div><strong>Every request stays visible</strong><span>Get replies and resolution updates in your workspace.</span></div>
+            </div>
+        </section>
+
         <section class="marketing-hero">
             <div class="marketing-hero-copy">
                 <span class="marketing-eyebrow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> DRN TECH support workspace</span>
@@ -76,5 +120,6 @@
     </main>
 
     <footer class="marketing-footer"><div class="marketing-footer-brand"><strong>DRN TECH</strong><span>HelpDesk Pro</span></div><p>Secure, organised IT support for modern teams.</p><div><a href="{{ url_for('login') }}">Sign in</a><a href="{{ url_for('guest') }}">Guest WiFi</a></div><small>© 2026 DRN TECH. All rights reserved.</small></footer>
+    <script src="{{ url_for('static', filename='js/marketing-nav.js') }}" defer></script>
 </body>
 </html>

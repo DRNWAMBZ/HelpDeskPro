@@ -232,6 +232,14 @@
     font-size: 15px;
 }
 
+.admin-report-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
 .admin-report-date-form {
     align-items: center;
     display: flex;
@@ -268,7 +276,7 @@
     font-size: 13px;
     font-weight: 800;
     gap: 7px;
-    padding: 9px 11px;
+    padding: 10px 13px;
     text-decoration: none;
 }
 
@@ -863,6 +871,12 @@
         flex-direction: column;
     }
 
+    .admin-report-actions {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+    }
+
     .admin-report-date-form input[type="date"],
     .admin-report-date-form .admin-filter-btn,
     .admin-report-date-form .admin-clear-filter-btn,
@@ -1398,6 +1412,56 @@
 .admin-delete-user-btn:focus-visible {
     outline: 3px solid rgba(180, 35, 24, 0.2);
     outline-offset: 2px;
+}
+
+/* =========================================================
+   ADMIN TICKET DETAIL — DESKTOP FINISH
+========================================================= */
+
+.admin-ticket-overview {
+    border: 1px solid #e1ebf4;
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(15, 76, 129, 0.08);
+    padding: 28px;
+}
+
+.admin-ticket-overview > .ticket-details-meta {
+    background: #f8fbff;
+    border-color: #dfeaf4;
+    margin-top: 0;
+}
+
+.admin-ticket-overview .ticket-description,
+.admin-ticket-overview .ticket-conversation,
+.admin-ticket-overview .ticket-attachments,
+.admin-ticket-overview .internal-notes {
+    box-shadow: none;
+}
+
+.admin-ticket-overview .conversation-header {
+    border-bottom: 1px solid #edf2f7;
+    margin-bottom: 18px;
+    padding-bottom: 15px;
+}
+
+.admin-ticket-overview .admin-status-form {
+    background: #f8fbff;
+    border: 1px solid #dfeaf4;
+    border-radius: 12px;
+    margin-top: 16px;
+    padding: 16px;
+}
+
+.admin-ticket-overview .admin-ticket-management {
+    border-top: 0;
+    margin-top: 20px;
+    padding-top: 0;
+}
+
+@media (max-width: 650px) {
+    .admin-ticket-overview {
+        padding: 20px;
+    }
 }
 
 @media (max-width: 700px) {

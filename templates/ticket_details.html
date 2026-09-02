@@ -151,20 +151,17 @@
      TICKET CONVERSATION
      ===================================================== -->
 
-<div class="ticket-conversation">
+<details class="ticket-conversation collapsible-ticket-conversation">
 
-    <div class="conversation-header">
+    <summary class="collapsible-ticket-summary">
+        <span>
+            <strong><i class="fa-solid fa-comments" aria-hidden="true"></i> Conversation</strong>
+            <small>Follow updates and communicate with support.</small>
+        </span>
+        <i class="fa-solid fa-chevron-down collapsible-ticket-chevron" aria-hidden="true"></i>
+    </summary>
 
-        <h3>
-            <i class="fa-solid fa-comments"></i>
-            Conversation
-        </h3>
-
-        <p>
-            Follow updates and communicate with support.
-        </p>
-
-    </div>
+    <div class="collapsible-ticket-content">
 
 
     <div class="conversation-thread">
@@ -271,6 +268,7 @@
 
     {% endif %}
 
-</div>
+    </div>
+</details>
 
 {% endblock %}

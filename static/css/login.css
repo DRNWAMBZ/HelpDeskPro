@@ -80,12 +80,10 @@
 
 .login-logo img{
 
-    width:62px;
+    width:78px;
 
-    height:62px;
-    object-fit:cover;
-    border-radius:17px;
-    box-shadow:0 10px 22px rgba(15,76,129,.18);
+    height:112px;
+    object-fit:contain;
 
 }
 
