@@ -2,460 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelpDesk Pro</title>
-    <link rel="stylesheet"
-          href="{{ url_for('static',filename='css/style.css') }}">
-    <link rel="icon"
-      type="image/png"
-      href="{{ url_for('static', filename='images/favicon.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRN TECH | HelpDesk Pro</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
-
-<body>
-<div class="progress-bar"></div>
-<div id="loader">
-
-    <div class="loader-content">
-
-        <div class="loader-logo">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="DRN TECH Logo">
-        </div>
-
-    </div>
-
-</div>
-
-    <nav class="navbar">
-
-        <a href="{{ url_for('home') }}" class="logo">
-            <h2>DRN TECH</h2>
+<body class="marketing-page">
+    <header class="marketing-header">
+        <a href="{{ url_for('home') }}" class="marketing-brand" aria-label="DRN TECH home">
+            <span class="marketing-brand-mark"><img src="{{ url_for('static', filename='images/drn-tech-mark-v2.png') }}" alt=""></span>
+            <span><strong>DRN TECH</strong><small>HelpDesk Pro</small></span>
         </a>
-
-        <ul class="nav-links">
-            
-
-            <li><a href="{{ url_for('home') }}">Home</a></li>
-
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-
-            <li><a href="{{ url_for('register') }}">Register</a></li>
-
-            <li><a href="{{ url_for('guest') }}">Guest WiFi</a></li>
-
-        </ul>
-
-        <div class="hamburger" id="hamburger">
-
-            ☰
-
+        <nav class="marketing-nav" aria-label="Main navigation">
+            <a href="#services">Services</a><a href="#how-it-works">How it works</a><a href="#contact">Contact</a><a href="{{ url_for('guest') }}">Guest WiFi</a>
+        </nav>
+        <div class="marketing-header-actions">
+            <a href="{{ url_for('login') }}" class="marketing-login-link">Sign in</a>
+            <a href="{{ url_for('register') }}" class="marketing-button marketing-button-small">Create account</a>
         </div>
-
-    </nav>
-<div class="mobile-menu" id="mobileMenu">
-
-    <a href="{{ url_for('home') }}">Home</a>
-
-    <a href="#services">Services</a>
-
-    <a href="#why-us">Why Choose Us</a>
-
-    <a href="#contact">Contact</a>
-
-    <a href="{{ url_for('login') }}">Login</a>
-
-    <a href="{{ url_for('register') }}">Register</a>
-
-    <a href="{{ url_for('guest') }}">Guest WiFi</a>
-
-</div>
-
-    <section class="hero">
-
-    <div class="hero-background">
-
-    <span class="blob blob1"></span>
-
-    <span class="blob blob2"></span>
-
-    <span class="blob blob3"></span>
-
-</div>
-
-    <div class="hero-text">
-        <div class="hero-badge">
-    <span>🛡 Enterprise IT Support Platform</span>
-</div>
-
-        <h1>
-    Modern IT Support<br>
-    Made Simple
-</h1>
-
-<h3>HelpDesk Pro</h3>
-            <p>
-    Streamline IT operations with an all-in-one help desk platform.
-    Manage support tickets, live chat, guest WiFi access and IT requests
-    through one secure dashboard.
-</p>
-    
-        <div class="hero-buttons">
-
-            <a href="{{ url_for('login') }}">
-                <button class="login-btn">
-                    Login
-                </button>
-            </a>
-
-            <a href="{{ url_for('register') }}">
-                <button class="register-btn">
-                    Register
-                </button>
-            </a>
-
-
-        </div>
-
-    </div>
-
-
-    <div class="hero-image">
-
-        <img src="{{ url_for('static', filename='images/helpdesk.png') }}"
-             alt="HelpDesk Illustration">
-
-    </div>
-
-</section>
-<section class="services hidden " id="services">
-
-    <h2>Our Services</h2>
-
-    <p class="section-text">
-        Everything you need to manage IT support in one place.
-    </p> 
-
-    <div class="service-grid">
-    
-        <a href="{{ url_for('tickets') }}" class="service-card service-link">
-
-            <div class="service-icon">🛠️</div>
-
-            <h3>Ticket Management</h3>
-
-            <p>
-                Submit and track IT support requests quickly.
-            </p>
-
-        </a>
-
-        <a href="{{ url_for('guest') }}" class="service-card service-link">
-
-            <div class="service-icon">📶</div>
-
-            <h3>Guest WiFi</h3>
-
-            <p>
-                Secure temporary internet access for visitors.
-            </p>
-
-        </a>
-
-        <a href="{{ url_for('chat') }}" class="service-card service-link">
-
-            <div class="service-icon">💬</div>
-
-            <h3>Live Support</h3>
-
-            <p>
-                Chat with IT staff in real time.
-            </p>
-
-        </a>
-
-        <a href="{{ url_for('knowledge') }}" class="service-card service-link">
-
-            <div class="service-icon">📚</div>
-
-            <h3>Knowledge Base</h3>
-
-            <p>
-                Browse helpful articles and troubleshooting guides.
-            </p>
-
-        </a>
-
-    </div>
-</section>
-<section class="stats hidden" id="stats">
-    <h2>Platform Statistics</h2>
-
-    <p class="section-text">
-        Delivering reliable IT support every day.
-    </p>
-
-    <di class="stats-grid">
-
-        <div class="stat-card">
-
-            <h3 id="ticket-counter">0</h3>
-
-            <p>Tickets Resolved</p>
-
-        </div>
-
-        <div class="stat-card">
-
-            <h3 id="satisfaction-counter">0</h3>
-
-            <p>Customer Satisfaction</p>
-
-        </div>
-
-        <div class="stat-card">
-
-            <h3 id="support-counter">0</h3>
-
-            <p>Support Availability</p>
-
-        </div>
-
-        <div class="stat-card">
-
-            <h3 id="response-counter">0</h3>
-
-            <p>Average Response Time</p>
-
-
-        </div>
-    </div>
-
-</section>
-<section class="why-us hidden" id="why-us">
-
-    <div class="why-image">
-
-        <img src="{{ url_for('static', filename='images/security.png') }}"
-             alt="Built for Modern IT Teams">
-
-    </div>
-
-    <div class="why-content">
-
-        <h2>Built for Modern IT Teams</h2>
-
-        <p class="section-text">
-
-            Empowering organizations with secure authentication, efficient IT support and a modern user experience designed for productivity.
-
-        </p>
-
-        <div class="feature">
-
-            <span>✔</span>
-
-            <div>
-
-                <h3>Enterprise Security</h3>
-
-                <p>Secure authentication and protected user data.</p>
-
+    </header>
+
+    <main>
+        <section class="marketing-hero">
+            <div class="marketing-hero-copy">
+                <span class="marketing-eyebrow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> DRN TECH support workspace</span>
+                <h1>IT support that stays clear, connected, and moving.</h1>
+                <p>HelpDesk Pro gives staff one secure place to raise requests, follow progress, find answers, and reach the support team when they need to.</p>
+                <div class="marketing-hero-actions">
+                    <a href="{{ url_for('register') }}" class="marketing-button">Create an account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <a href="{{ url_for('login') }}" class="marketing-button marketing-button-secondary">Sign in to HelpDesk</a>
+                </div>
+                <ul class="marketing-trust-list">
+                    <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Track every request</li>
+                    <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Get timely updates</li>
+                    <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Built for staff support</li>
+                </ul>
             </div>
-
-        </div>
-
-        <div class="feature">
-
-            <span>✔</span>
-
-            <div>
-
-                <h3>Fast Support</h3>
-
-                <p>Quick ticket submission and rapid issue resolution.</p>
-
+            <div class="marketing-hero-visual" aria-label="HelpDesk Pro support tools">
+                <div class="marketing-visual-card marketing-visual-main">
+                    <div class="marketing-visual-card-header"><span class="marketing-visual-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><span class="marketing-status-pill">Support request</span></div>
+                    <h2>Keep work moving</h2><p>Submit, follow, and resolve IT requests in one place.</p>
+                    <div class="marketing-progress"><span></span></div><small>Support is actively working on your issue.</small>
+                </div>
+                <div class="marketing-visual-card marketing-visual-float marketing-visual-chat"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Live support</span></div>
+                <div class="marketing-visual-card marketing-visual-float marketing-visual-knowledge"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Quick answers</span></div>
             </div>
+        </section>
 
-        </div>
-
-        <div class="feature">
-
-            <span>✔</span>
-
-            <div>
-
-                <h3>User Friendly</h3>
-
-                <p>Simple interface that anyone can use with ease.</p>
-
+        <section class="marketing-section marketing-services" id="services">
+            <div class="marketing-section-heading"><span class="marketing-eyebrow">Everything in one place</span><h2>Support tools that make the next step obvious.</h2><p>Designed for staff who need answers quickly and support teams who need an organised queue.</p></div>
+            <div class="marketing-service-grid">
+                <a href="{{ url_for('tickets') }}" class="marketing-service-card"><span class="marketing-service-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><h3>Ticket management</h3><p>Raise a request, add detail, and follow its progress from open to resolved.</p><span>View tickets <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a>
+                <a href="{{ url_for('chat') }}" class="marketing-service-card"><span class="marketing-service-icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></span><h3>Live support</h3><p>Use a focused private chat when a conversation is the fastest way forward.</p><span>Open live chat <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a>
+                <a href="{{ url_for('knowledge') }}" class="marketing-service-card"><span class="marketing-service-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span><h3>Knowledge Base</h3><p>Find practical guides for common problems before opening a request.</p><span>Browse guides <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a>
+                <a href="{{ url_for('guest') }}" class="marketing-service-card"><span class="marketing-service-icon"><i class="fa-solid fa-wifi" aria-hidden="true"></i></span><h3>Guest WiFi</h3><p>Provide visitors with controlled temporary access through a clear request flow.</p><span>Guest WiFi access <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a>
             </div>
-
-        </div>
-
-        <div class="feature">
-
-            <span>✔</span>
-
-            <div>
-
-                <h3>Scalable Platform</h3>
-
-                <p>Designed to grow alongside your organization.</p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-<section class="contact hidden" id="contact">
-
-    <h2>Contact Our IT Team</h2>
-
-    <p class="section-text">
-
-        Need assistance? Our support team is ready to help.
-
-    </p>
-
-    <div class="contact-grid">
-
-        <div class="contact-card">
-
-            <div class="contact-icon">📧</div>
-
-            <h3>Email</h3>
-
-    <p>
-        <a href="mailto:support@drntech.com?subject=HelpDesk%20Support%20Request">
-            support@drntech.com
-        </a>
-    </p>
-
-    </div>
-
-        <div class="contact-card">
-
-            <div class="contact-icon">📞</div>
-
-            <h3>Phone</h3>
-
-           <a href="tel:+2348001234567">
-                +234 800 123 4567
-            </a>
-
-        </div>
-
-        <div class="contact-card">
-
-            <div class="contact-icon">🕒</div>
-
-            <h3>Office Hours</h3>
-
-            <p>Monday - Friday</p>
-
-            <p>8:00 AM - 5:00 PM</p>
-
-        </div>
-
-        <div class="contact-card">
-
-            <div class="contact-icon">📍</div>
-
-            <h3>Location</h3>
-        <p>
-            <a href="https://maps.google.com/?q=Lagos,Nigeria"
-                target="_blank">
-                Lagos, Nigeria
-            </a>
-        </p>
-        </div>
-
-    </div>
-</section>
-
-<footer class="footer">
-
-    <div class="footer-container">
-
-        <div class="footer-section">
-
-            <h2>DRN TECH</h2>
-
-            <p>
-                Enterprise IT Support Platform designed for
-                secure, reliable and modern organizations.
-            </p>
-
-        </div>
-
-        <div class="footer-section">
-
-            <h3>Quick Links</h3>
-
-            <a href="{{ url_for('home') }}">Home</a>
-
-            <a href="{{ url_for('login') }}">Login</a>
-
-            <a href="{{ url_for('register') }}">Register</a>
-
-            <a href="{{ url_for('guest') }}">Guest WiFi</a>
-
-        </div>
-
-        <div class="footer-section">
-
-            <h3>Services</h3>
-
-            <a href="{{ url_for('tickets') }}">Ticket Management</a>
-
-            <a href="{{ url_for('chat') }}">Live Support</a>
-
-            <a href="{{ url_for('knowledge') }}">Knowledge Base</a>
-
-        </div>
-
-        <div class="footer-section">
-
-            <h3>Contact</h3>
-
-        <p>
-            
-            <a href="mailto:support@drntech.com?subject=HelpDesk%20Support%20Request">
-                📧 support@drntech.com
-            </a>
-        </p>    
-
-        <p>
-            
-            <a href="tel:+2348001234567">
-            📞 +234 800 123 4567
-            </a>
-        </p>
-
-            <p>
-                <a href="https://maps.google.com/?q=Lagos,Nigeria"
-                    target="_blank">
-                📍 Lagos, Nigeria
-                </a>
-            </p>
-
-        </div>
-
-    </div>
-
-    <hr>
-
-    <div class="copyright">
-
-        <p>© 2026 DRN TECH. All Rights Reserved.</p>
-
-    </div>
-
-</footer>
-<button id="backToTop" title="Back to Top">
-    <span>⌃</span>
-</button>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+        </section>
+
+        <section class="marketing-section marketing-workflow" id="how-it-works">
+            <div class="marketing-workflow-copy"><span class="marketing-eyebrow">A simpler support journey</span><h2>From question to resolution, without chasing updates.</h2><p>Every tool is connected to the same support experience, so staff always know what is happening next.</p></div>
+            <ol class="marketing-workflow-list">
+                <li><span>01</span><div><h3>Tell us what happened</h3><p>Open a ticket or start a live chat with the details.</p></div></li>
+                <li><span>02</span><div><h3>Follow the work</h3><p>See replies, progress updates, and the current status clearly.</p></div></li>
+                <li><span>03</span><div><h3>Close with confidence</h3><p>Confirm the issue is resolved and share quick feedback.</p></div></li>
+            </ol>
+        </section>
+
+        <section class="marketing-section marketing-contact" id="contact">
+            <div><span class="marketing-eyebrow">Need help now?</span><h2>Start with the support channel that suits the issue.</h2><p>Use HelpDesk Pro to create a tracked request, or contact the IT team directly for urgent assistance.</p></div>
+            <div class="marketing-contact-actions"><a href="{{ url_for('register') }}" class="marketing-button">Get started <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a href="mailto:support@drntech.com?subject=HelpDesk%20Support%20Request" class="marketing-contact-link"><i class="fa-solid fa-envelope" aria-hidden="true"></i> support@drntech.com</a></div>
+        </section>
+    </main>
+
+    <footer class="marketing-footer"><div class="marketing-footer-brand"><strong>DRN TECH</strong><span>HelpDesk Pro</span></div><p>Secure, organised IT support for modern teams.</p><div><a href="{{ url_for('login') }}">Sign in</a><a href="{{ url_for('guest') }}">Guest WiFi</a></div><small>© 2026 DRN TECH. All rights reserved.</small></footer>
 </body>
 </html>

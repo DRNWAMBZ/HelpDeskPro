@@ -6,30 +6,22 @@ Tickets
 
 {% block content %}
 
-<div class="topbar-left">
-    <h2>Tickets</h2>
-</div>
+<div class="tickets-page admin-page">
 
-<div class="topbar-right">
-    <span>
-        Welcome,
-        <strong>{{ current_user.username }}</strong>
-    </span>
-</div>
-
-<div class="tickets-page">
-
-    <div class="tickets-header">
+    <div class="tickets-header admin-header">
 
         <div>
+            <span class="admin-header-eyebrow">MY SUPPORT QUEUE</span>
             <h1>My Tickets</h1>
             <p>View and track your support requests.</p>
         </div>
 
-        <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
-            <i class="fa-solid fa-plus"></i>
-            Create Ticket
-        </a>
+        <div class="admin-header-actions">
+            <div class="admin-badge"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Personal queue</div>
+            <a href="{{ url_for('create_ticket') }}" class="admin-header-queue-btn">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Create ticket
+            </a>
+        </div>
 
     </div>
 
@@ -45,7 +37,7 @@ Tickets
     {% endwith %}
 
 
-    <div class="tickets-card">
+    <div class="tickets-card admin-section">
 
         {% if tickets %}
 

@@ -6,61 +6,64 @@ Dashboard
 
 {% block content %}
 
-<div class="user-dashboard">
+<div class="user-dashboard admin-page">
 
-    <section class="dashboard-welcome">
+    <section class="dashboard-welcome admin-header">
 
         <div class="welcome-text">
-            <span class="welcome-label">DRN TECH SUPPORT</span>
+            <span class="welcome-label admin-header-eyebrow">MY SUPPORT OVERVIEW</span>
 
             <h1>
-                 Good to see you again,
-                <strong>{{ current_user.username }}</strong> 👋
+                Welcome back, <strong>{{ current_user.username }}</strong>
             </h1>
 
             <p>
-                Here's a quick overview of your support requests and account activity.
+                Keep track of your requests, find answers, and reach support when you need it.
             </p>
         </div>
 
-        <div class="welcome-action">
-            <a href="{{ url_for('create_ticket') }}" class="create-ticket-btn">
-                <i class="fa-solid fa-plus"></i>
-                Create Ticket
+        <div class="welcome-action admin-header-actions">
+            <div class="admin-badge">
+                <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                Support member
+            </div>
+            <a href="{{ url_for('tickets') }}" class="admin-header-queue-btn">
+                <i class="fa-solid fa-ticket" aria-hidden="true"></i>
+                My tickets
             </a>
         </div>
 
     </section>
 
 
-    <section class="ticket-statistics">
+    <section class="ticket-statistics admin-stats">
 
-        <div class="stat-card">
-            <div class="stat-icon">🎫</div>
+        <div class="stat-card admin-stat-card admin-stat-total">
+            <div class="stat-icon admin-stat-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
             <div class="stat-info">
                 <span>Total Tickets</span>
                 <strong>{{ total_tickets }}</strong>
             </div>
         </div>
 
-        <div class="stat-card open-card">
-            <div class="stat-icon">🟠</div>
+        <div class="stat-card open-card admin-stat-card admin-stat-open">
+            <div class="stat-icon admin-stat-icon"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></div>
             <div class="stat-info">
                 <span>Open</span>
                 <strong>{{ open_tickets }}</strong>
             </div>
         </div>
 
-        <div class="stat-card progress-card">
-            <div class="stat-icon">🟡</div>
+        <div class="stat-card progress-card admin-stat-card admin-stat-progress">
+            <div class="stat-icon admin-stat-icon"><i class="fa-solid fa-spinner" aria-hidden="true"></i></div>
             <div class="stat-info">
                 <span>In Progress</span>
                 <strong>{{ in_progress_tickets }}</strong>
             </div>
         </div>
 
-        <div class="stat-card resolved-card">
-            <div class="stat-icon">🟢</div>
+        <div class="stat-card resolved-card admin-stat-card admin-stat-resolved">
+            <div class="stat-icon admin-stat-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
             <div class="stat-info">
                 <span>Resolved</span>
                 <strong>{{ resolved_tickets }}</strong>
@@ -72,16 +75,17 @@ Dashboard
 
     <section class="dashboard-grid">
 
-        <div class="dashboard-card recent-tickets-card">
+        <div class="dashboard-card admin-section recent-tickets-card">
 
-            <div class="card-header">
+            <div class="card-header admin-section-header">
                 <div>
                     <h2>Recent Tickets</h2>
                     <p>Your latest support requests</p>
                 </div>
 
-                <a href="{{ url_for('tickets') }}" class="view-all-link">
-                    View All
+                <a href="{{ url_for('tickets') }}" class="admin-view-btn">
+                    View tickets
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </div>
 
@@ -127,7 +131,7 @@ Dashboard
             {% else %}
 
             <div class="empty-dashboard">
-                <div class="empty-icon">🎫</div>
+                <div class="empty-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
                 <h3>No tickets yet</h3>
                 <p>You haven't submitted any support tickets.</p>
 
@@ -142,9 +146,9 @@ Dashboard
         </div>
 
 
-        <div class="dashboard-card quick-actions-card">
+        <div class="dashboard-card admin-section quick-actions-card">
 
-            <div class="card-header">
+            <div class="card-header admin-section-header">
                 <div>
                     <h2>Quick Actions</h2>
                     <p>Get help faster</p>
@@ -154,7 +158,7 @@ Dashboard
             <div class="quick-actions">
 
                 <a href="{{ url_for('create_ticket') }}" class="quick-action">
-                    <span class="quick-action-icon">➕</span>
+                    <span class="quick-action-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
                     <div>
                         <strong>Create Ticket</strong>
                         <span>Report a new issue</span>
@@ -162,7 +166,7 @@ Dashboard
                 </a>
 
                 <a href="{{ url_for('tickets') }}" class="quick-action">
-                    <span class="quick-action-icon">🎫</span>
+                    <span class="quick-action-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
                     <div>
                         <strong>My Tickets</strong>
                         <span>Track your requests</span>
@@ -170,7 +174,7 @@ Dashboard
                 </a>
 
                 <a href="{{ url_for('knowledge') }}" class="quick-action">
-                    <span class="quick-action-icon">📚</span>
+                    <span class="quick-action-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
                     <div>
                         <strong>Knowledge Base</strong>
                         <span>Find helpful solutions</span>
@@ -178,7 +182,7 @@ Dashboard
                 </a>
 
                 <a href="{{ url_for('chat') }}" class="quick-action">
-                    <span class="quick-action-icon">💬</span>
+                    <span class="quick-action-icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></span>
                     <div>
                         <strong>Live Chat</strong>
                         <span>Talk to support</span>
@@ -194,7 +198,7 @@ Dashboard
 
     <section class="support-banner">
 
-        <div class="support-banner-icon">🛠️</div>
+        <div class="support-banner-icon"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i></div>
 
         <div class="support-banner-content">
             <h2>Need help?</h2>

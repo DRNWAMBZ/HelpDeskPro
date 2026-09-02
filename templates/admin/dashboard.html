@@ -10,22 +10,28 @@ Admin Dashboard
 
     <div class="admin-header">
         <div>
+            <span class="admin-header-eyebrow">OPERATIONS OVERVIEW</span>
             <h1>Admin Dashboard</h1>
             <p>
-                Welcome back, {{ current_user.username }} 👋
-                Here's an overview of your support activity.
+                Welcome back, {{ current_user.username }}. Monitor the queue and keep support moving.
             </p>
         </div>
 
-        <div class="admin-badge">
-            <i class="fa-solid fa-shield-halved"></i>
-            Administrator
+        <div class="admin-header-actions">
+            <div class="admin-badge">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                Administrator
+            </div>
+            <a href="{{ url_for('admin_tickets') }}" class="admin-header-queue-btn">
+                <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                Open queue
+            </a>
         </div>
     </div>
 
     <div class="admin-stats">
 
-        <div class="admin-stat-card">
+        <div class="admin-stat-card admin-stat-total">
             <div class="admin-stat-icon">
                 <i class="fa-solid fa-ticket"></i>
             </div>
@@ -35,7 +41,7 @@ Admin Dashboard
             </div>
         </div>
 
-        <div class="admin-stat-card">
+        <div class="admin-stat-card admin-stat-open">
             <div class="admin-stat-icon">
                 <i class="fa-solid fa-folder-open"></i>
             </div>
@@ -45,7 +51,7 @@ Admin Dashboard
             </div>
         </div>
 
-        <div class="admin-stat-card">
+        <div class="admin-stat-card admin-stat-progress">
             <div class="admin-stat-icon">
                 <i class="fa-solid fa-spinner"></i>
             </div>
@@ -55,7 +61,7 @@ Admin Dashboard
             </div>
         </div>
 
-        <div class="admin-stat-card resolved">
+        <div class="admin-stat-card admin-stat-resolved">
             <div class="admin-stat-icon">
                 <i class="fa-solid fa-circle-check"></i>
             </div>

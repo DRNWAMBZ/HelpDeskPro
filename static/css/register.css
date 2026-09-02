@@ -80,10 +80,28 @@
 
 .register-logo img{
 
-    width:210px;
+    width:62px;
 
-    height:auto;
+    height:62px;
+    object-fit:cover;
+    border-radius:17px;
+    box-shadow:0 10px 22px rgba(15,76,129,.18);
 
+}
+
+.auth-product-name{
+    margin:0 0 9px;
+    color:#0F4C81;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-align:center;
+    text-transform:uppercase;
+}
+
+.auth-product-name span{
+    color:#6b8295;
+    font-weight:700;
 }
 
 .register-card{

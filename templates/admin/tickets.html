@@ -10,13 +10,17 @@ Ticket Management
 
     <div class="admin-header">
         <div>
+            <span class="admin-header-eyebrow">SUPPORT OPERATIONS</span>
             <h1>Ticket Management</h1>
             <p>Review and manage support requests from all users.</p>
         </div>
 
-        <a href="{{ url_for('admin_dashboard') }}" class="secondary-action-btn">
-            ← Dashboard
-        </a>
+        <div class="admin-header-actions">
+            <div class="admin-badge"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Support queue</div>
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-header-queue-btn">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Dashboard
+            </a>
+        </div>
     </div>
     <!-- =====================================================
      TICKET SEARCH AND FILTERS
@@ -244,7 +248,7 @@ Ticket Management
 </div>
 
     <!-- OPEN -->
-    <div class="admin-card">
+    <div class="admin-card admin-section admin-ticket-status-card admin-ticket-status-open">
 
         <div class="admin-card-header">
             <div>
@@ -310,7 +314,7 @@ Ticket Management
 
 
     <!-- IN PROGRESS -->
-    <div class="admin-card">
+    <div class="admin-card admin-section admin-ticket-status-card admin-ticket-status-progress">
 
         <div class="admin-card-header">
             <div>
@@ -376,7 +380,7 @@ Ticket Management
 
 
     <!-- RESOLVED -->
-    <div class="admin-card">
+    <div class="admin-card admin-section admin-ticket-status-card admin-ticket-status-resolved">
 
         <div class="admin-card-header">
             <div>

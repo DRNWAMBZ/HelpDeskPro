@@ -40,8 +40,8 @@
     display: flex;
     align-items: center;
 
-    gap: 10px;
-    margin: 0 7px 24px;
+    gap: 11px;
+    margin: 2px 7px 27px;
 }
 
 
@@ -50,16 +50,34 @@
     align-items: center;
     justify-content: center;
 
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
 
-    border: 1px solid rgba(255, 255, 255, 0.36);
-    border-radius: 13px;
+    overflow: hidden;
+    border-radius: 14px;
 
-    background: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 8px 18px rgba(3, 31, 54, 0.18);
-    color: #ffffff;
+    background: transparent;
+    box-shadow: none;
 }
+
+.sidebar-brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.04);
+    clip-path: polygon(50% 0%, 96% 27%, 96% 70%, 50% 100%, 4% 70%, 4% 27%);
+}
+
+/* Shared desktop dashboard polish. */
+.main-content { background: #f5f8fc; }
+.user-dashboard, .admin-page { max-width: 1480px; margin: 0 auto; }
+.dashboard-welcome, .admin-header { padding-bottom: 22px; border-bottom: 1px solid #dfe9f2; }
+.dashboard-welcome h1, .admin-header h1 { letter-spacing: -.025em; }
+.stat-card, .admin-stat-card, .dashboard-card, .admin-report-card, .admin-section { border-color: #dce7f0; box-shadow: 0 8px 22px rgba(21, 61, 91, .06); }
+.stat-card:hover, .admin-stat-card:hover, .dashboard-card:hover { box-shadow: 0 14px 30px rgba(21, 61, 91, .1); }
+.stat-icon, .quick-action-icon, .support-banner-icon { display: inline-flex; align-items: center; justify-content: center; color: #0f4c81; background: #e7f1fa; }
+.open-card .stat-icon { color: #b66a0c; background: #fff3df; }.progress-card .stat-icon { color: #9b6a00; background: #fff8d8; }.resolved-card .stat-icon { color: #18764b; background: #e5f6ec; }
+.quick-action:hover { border-color: #9fc3e1; background: #f7fbff; }
 
 
 .sidebar-brand-copy {
@@ -73,7 +91,8 @@
 .sidebar-brand-copy strong {
     color: #ffffff;
 
-    font-size: 14px;
+    font-family: Georgia, serif;
+    font-size: 15px;
     font-weight: 800;
     letter-spacing: 0.04em;
 }
@@ -84,8 +103,9 @@
 
     color: rgba(255, 255, 255, 0.70);
 
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
 
@@ -4581,6 +4601,227 @@
 
     .notification-unread-indicator {
         display: none;
+    }
+}
+
+
+/* =========================================================
+   USER DASHBOARD — ADMIN-ALIGNED DESKTOP FINISH
+   ========================================================= */
+
+.user-dashboard {
+    max-width: 1380px;
+    padding: 30px;
+}
+
+.dashboard-welcome {
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid #dfe9f2;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 30px;
+    padding: 0 0 22px;
+}
+
+.welcome-label {
+    color: #1767a8;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 5px;
+}
+
+.welcome-text h1 {
+    color: #0f4c81;
+    font-size: 30px;
+    letter-spacing: -0.025em;
+    margin-bottom: 8px;
+}
+
+.welcome-text h1 strong {
+    color: #0f4c81;
+}
+
+.welcome-text p {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.dashboard-welcome .create-ticket-btn {
+    background: #0f4c81;
+    color: #ffffff;
+    box-shadow: none;
+    padding: 10px 15px;
+}
+
+.dashboard-welcome .create-ticket-btn:hover {
+    background: #1767a8;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(15, 76, 129, 0.16);
+}
+
+.ticket-statistics {
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    border-color: #edf2f7;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, 0.08);
+    gap: 15px;
+    min-height: 0;
+    padding: 22px;
+}
+
+.stat-card:hover {
+    box-shadow: 0 12px 30px rgba(15, 76, 129, 0.12);
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    background: #eef6ff;
+    border-radius: 12px;
+    color: #0f4c81;
+    font-size: 19px;
+    height: 48px;
+    width: 48px;
+}
+
+.open-card .stat-icon,
+.progress-card .stat-icon,
+.resolved-card .stat-icon {
+    background: #eef6ff;
+    color: #0f4c81;
+}
+
+.stat-info {
+    gap: 4px;
+}
+
+.stat-info span {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.stat-info strong {
+    color: #0f4c81;
+    font-size: 27px;
+}
+
+.dashboard-grid {
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.dashboard-card {
+    border-color: #e7eff7;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, 0.08);
+    padding: 25px;
+}
+
+.card-header {
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.card-header h2 {
+    color: #0f4c81;
+    font-size: 21px;
+}
+
+.card-header p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.view-all-link {
+    align-items: center;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 7px;
+}
+
+.view-all-link::after {
+    content: "→";
+    font-size: 16px;
+    line-height: 1;
+}
+
+.quick-actions {
+    gap: 9px;
+}
+
+.quick-action {
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 11px;
+}
+
+.quick-action:hover {
+    background: #f7fbff;
+    border-color: #d9eafa;
+    transform: translateX(3px);
+}
+
+.quick-action-icon {
+    background: #eef6ff;
+    border-radius: 11px;
+    color: #0f4c81;
+    font-size: 17px;
+    height: 42px;
+    width: 42px;
+}
+
+.quick-action strong {
+    color: #173b5d;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.quick-action div span {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.support-banner {
+    border: 1px solid #d9eafa;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(15, 76, 129, 0.08);
+}
+
+.empty-icon {
+    align-items: center;
+    background: #eef6ff;
+    border-radius: 12px;
+    color: #0f4c81;
+    display: inline-flex;
+    font-size: 18px;
+    height: 48px;
+    justify-content: center;
+    width: 48px;
+}
+
+@media (max-width: 900px) {
+    .user-dashboard {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .user-dashboard {
+        padding: 20px;
+    }
+
+    .dashboard-welcome {
+        padding: 0 0 20px;
+    }
+
+    .welcome-text h1 {
+        font-size: 26px;
     }
 }
 
