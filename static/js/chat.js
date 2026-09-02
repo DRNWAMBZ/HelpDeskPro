@@ -62,7 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (currentSignature !== lastSignature) {
-                if (document.activeElement === composer) {
+                const hasUnsavedDraft = composer && composer.value.trim().length > 0;
+
+                if (hasUnsavedDraft) {
                     return;
                 }
 
