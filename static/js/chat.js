@@ -6,12 +6,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const takenNotice = document.querySelector("[data-chat-taken-notice]");
     const refreshUrl = chatPage?.dataset.chatRefreshUrl;
     const conversationId = chatPage?.dataset.chatConversationId;
+    const draftStorageKey = conversationId
+        ? `helpdeskpro-chat-draft-${conversationId}`
+        : null;
     let chatTaken = false;
     let lastSignature = null;
     let updateCheckInFlight = false;
 
     if (!chatPage) {
         return;
+    }
+
+    const saveDraft = () => {
+        if (!composer || !draftStorageKey) {
+            return;
+        }
+
+        if (composer.value.trim()) {
+            window.sessionStorage.setItem(draftStorageKey, composer.value);
+        } else {
+            window.sessionStorage.removeItem(draftStorageKey);
+        }
+    };
+
+    if (composer && draftStorageKey) {
+        const savedDraft = window.sessionStorage.getItem(draftStorageKey);
+
+        if (savedDraft) {
+            composer.value = savedDraft;
+        }
+
+        composer.addEventListener("input", saveDraft);
+        composerForm.addEventListener("submit", () => {
+            window.sessionStorage.removeItem(draftStorageKey);
+        });
+        window.addEventListener("beforeunload", saveDraft);
     }
 
     const showTakenNotice = () => {
