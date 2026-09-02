@@ -7,6 +7,7 @@ import unittest
 from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 
 
 TEST_DATABASE_PATH = Path(tempfile.gettempdir()) / "helpdesk-pro-regression.db"
@@ -332,6 +333,62 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.sign_in(other_user_client, "fresh-staff@example.test")
         response = other_user_client.get(f"/ticket/attachments/{attachment_id}")
         self.assertEqual(response.status_code, 403)
+
+    def test_ticket_email_notifications_are_sent_for_key_updates(self):
+        with app.app_context():
+            ticket = Ticket(
+                ticket_number=1,
+                subject="Email notification test",
+                description="Verify ticket update messages.",
+                priority="Medium",
+                category="Software",
+                status="Open",
+                user_id=self.user_id,
+            )
+            db.session.add(ticket)
+            db.session.commit()
+            ticket_id = ticket.id
+
+        staff_client = app.test_client()
+        admin_client = app.test_client()
+        self.sign_in(staff_client, "staff@example.test")
+        self.sign_in(admin_client, "admin-one@example.test")
+
+        with patch("app.send_ticket_notification_email") as send_email:
+            token = self.csrf_token(staff_client, f"/ticket/{ticket_id}")
+            response = staff_client.post(
+                f"/ticket/{ticket_id}/reply",
+                data={"csrf_token": token, "message": "I have more details."},
+            )
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(send_email.call_count, 2)
+
+            send_email.reset_mock()
+            token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
+            response = admin_client.post(
+                f"/admin/ticket/{ticket_id}/progress-update",
+                data={"csrf_token": token, "update_type": "investigating"},
+            )
+            self.assertEqual(response.status_code, 302)
+            send_email.assert_called_once()
+
+            send_email.reset_mock()
+            token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
+            response = admin_client.post(
+                f"/admin/ticket/{ticket_id}/reply",
+                data={"csrf_token": token, "message": "We found the cause."},
+            )
+            self.assertEqual(response.status_code, 302)
+            send_email.assert_called_once()
+
+            send_email.reset_mock()
+            token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
+            response = admin_client.post(
+                f"/admin/ticket/{ticket_id}/status",
+                data={"csrf_token": token, "status": "Resolved"},
+            )
+            self.assertEqual(response.status_code, 302)
+            send_email.assert_called_once()
 
     def test_chat_claim_feedback_and_close(self):
         user_client = app.test_client()

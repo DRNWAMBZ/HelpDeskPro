@@ -124,6 +124,9 @@ app.config["MAIL_FROM"] = os.environ.get("MAIL_FROM")
 app.config["MAIL_USE_TLS"] = (
     os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
 )
+app.config["MAIL_TICKET_NOTIFICATIONS"] = (
+    os.environ.get("MAIL_TICKET_NOTIFICATIONS", "true").lower() == "true"
+)
 app.config["DISPLAY_TIMEZONE"] = os.environ.get(
     "DISPLAY_TIMEZONE",
     "Africa/Lagos",
@@ -1147,6 +1150,52 @@ def send_password_reset_email(user, token):
     return True
 
 
+def send_ticket_notification_email(user, subject, body):
+    """Send a non-critical ticket email without affecting the ticket action."""
+
+    if not app.config["MAIL_TICKET_NOTIFICATIONS"]:
+        return False
+
+    if not app.config["MAIL_SERVER"] or not app.config["MAIL_FROM"]:
+        return False
+
+    if bool(app.config["MAIL_USERNAME"]) != bool(
+        app.config["MAIL_PASSWORD"]
+    ):
+        return False
+
+    email = EmailMessage()
+    email["Subject"] = subject
+    email["From"] = app.config["MAIL_FROM"]
+    email["To"] = user.email
+    email.set_content(
+        f"Hello {user.username},\n\n{body}\n\n"
+        "Sign in to HelpDesk Pro to view the full conversation."
+    )
+
+    try:
+        with smtplib.SMTP(
+            app.config["MAIL_SERVER"],
+            app.config["MAIL_PORT"],
+            timeout=10,
+        ) as smtp:
+            if app.config["MAIL_USE_TLS"]:
+                smtp.starttls()
+
+            if app.config["MAIL_USERNAME"]:
+                smtp.login(
+                    app.config["MAIL_USERNAME"],
+                    app.config["MAIL_PASSWORD"],
+                )
+
+            smtp.send_message(email)
+    except (OSError, smtplib.SMTPException):
+        app.logger.warning("Ticket notification email could not be sent.")
+        return False
+
+    return True
+
+
 def add_knowledge_article_image(article):
 
     upload = request.files.get("article_image")
@@ -2108,6 +2157,16 @@ def reply_to_ticket(ticket_id):
         )
 
     db.session.commit()
+
+    for admin in active_admins:
+        send_ticket_notification_email(
+            admin,
+            "HelpDesk Pro: new staff reply",
+            (
+                f"{current_user.username} replied to the support request "
+                f"\"{ticket.subject}\"."
+            ),
+        )
 
     flash(
         "Your reply was added.",
@@ -3593,6 +3652,17 @@ def admin_update_ticket_status(ticket_id):
 
     db.session.commit()
 
+    if (
+        new_status == "Resolved"
+        and previous_status != "Resolved"
+        and ticket.user.is_active
+    ):
+        send_ticket_notification_email(
+            ticket.user,
+            "HelpDesk Pro: your request was resolved",
+            f"Your support request \"{ticket.subject}\" has been resolved.",
+        )
+
     flash(
         f"Ticket #{ticket.ticket_number:04d} updated to {new_status}.",
         "success",
@@ -3677,6 +3747,13 @@ def admin_ticket_progress_update(ticket_id):
         )
 
     db.session.commit()
+
+    if ticket.user.is_active:
+        send_ticket_notification_email(
+            ticket.user,
+            "HelpDesk Pro: progress update",
+            f"Support posted a progress update on \"{ticket.subject}\".",
+        )
     flash("Progress update sent to the user.", "success")
 
     return redirect(
@@ -3736,6 +3813,13 @@ def admin_reply_to_ticket(ticket_id):
         )
 
     db.session.commit()
+
+    if ticket.user_id != current_user.id and ticket.user.is_active:
+        send_ticket_notification_email(
+            ticket.user,
+            "HelpDesk Pro: support replied",
+            f"Support replied to your request \"{ticket.subject}\".",
+        )
 
     flash(
         "Reply sent successfully.",
