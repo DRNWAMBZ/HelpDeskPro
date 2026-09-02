@@ -1705,6 +1705,85 @@ def chat_conversation_availability(conversation_id):
     return jsonify({"state": "available"})
 
 
+@app.route("/chat/refresh-state")
+@login_required
+def chat_refresh_state():
+    """Return lightweight chat metadata so browsers reload only after a change."""
+    active_conversation_id = request.args.get("conversation", type=int)
+
+    if current_user.is_admin:
+        staff_started_chat = db.session.query(ChatMessage.id).filter(
+            ChatMessage.conversation_id == ChatConversation.id,
+            ChatMessage.sender_id == ChatConversation.user_id,
+        ).exists()
+
+        visible_conversations = ChatConversation.query.filter(
+            ChatConversation.user.has(User.is_admin.is_(False)),
+            ChatConversation.user.has(User.is_active.is_(True)),
+            staff_started_chat,
+            or_(
+                ChatConversation.assigned_admin_id.is_(None),
+                ChatConversation.assigned_admin_id == current_user.id,
+            ),
+        )
+
+        conversation_rows = visible_conversations.with_entities(
+            ChatConversation.id,
+            ChatConversation.last_message_at,
+            ChatConversation.assigned_admin_id,
+            ChatConversation.resolution_requested_at,
+        ).order_by(ChatConversation.id.asc()).all()
+
+        active_conversation = None
+        if active_conversation_id:
+            active_conversation = ChatConversation.query.filter(
+                ChatConversation.id == active_conversation_id,
+                ChatConversation.user.has(User.is_admin.is_(False)),
+            ).first()
+
+            if active_conversation is None:
+                active_state = "closed"
+            elif (
+                active_conversation.assigned_admin_id is not None
+                and active_conversation.assigned_admin_id != current_user.id
+            ):
+                active_state = "taken"
+            elif active_conversation.assigned_admin_id == current_user.id:
+                active_state = "assigned_to_you"
+            else:
+                active_state = "available"
+        else:
+            active_state = None
+    else:
+        conversation_rows = ChatConversation.query.filter_by(
+            user_id=current_user.id,
+        ).with_entities(
+            ChatConversation.id,
+            ChatConversation.last_message_at,
+            ChatConversation.assigned_admin_id,
+            ChatConversation.resolution_requested_at,
+        ).order_by(ChatConversation.id.asc()).all()
+        active_state = None
+
+    signature = [
+        {
+            "id": conversation.id,
+            "last_message_at": conversation.last_message_at.isoformat(),
+            "assigned_admin_id": conversation.assigned_admin_id,
+            "resolution_requested_at": (
+                conversation.resolution_requested_at.isoformat()
+                if conversation.resolution_requested_at else None
+            ),
+        }
+        for conversation in conversation_rows
+    ]
+
+    return jsonify({
+        "signature": signature,
+        "active_state": active_state,
+    })
+
+
 @app.route(
     "/reset-password/<token>",
     methods=["GET", "POST"],

@@ -9,9 +9,8 @@ Live Chat | HelpDesk Pro
 <section
     class="chat-page"
     data-chat-page
-    {% if current_user.is_admin and active_conversation %}
-        data-chat-availability-url="{{ url_for('chat_conversation_availability', conversation_id=active_conversation.id) }}"
-    {% endif %}
+    data-chat-refresh-url="{{ url_for('chat_refresh_state') }}"
+    {% if active_conversation %}data-chat-conversation-id="{{ active_conversation.id }}"{% endif %}
 >
     <header class="chat-page-header">
         <div>
@@ -31,7 +30,7 @@ Live Chat | HelpDesk Pro
 
         <span class="chat-refresh-status">
             <i class="fa-solid fa-rotate" aria-hidden="true"></i>
-            Refreshes every 5 seconds
+            Checks for updates every 5 seconds
         </span>
     </header>
 

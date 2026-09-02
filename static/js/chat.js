@@ -4,8 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const composerForm = document.querySelector(".chat-composer");
     const composer = composerForm?.querySelector("textarea");
     const takenNotice = document.querySelector("[data-chat-taken-notice]");
-    const availabilityUrl = chatPage?.dataset.chatAvailabilityUrl;
+    const refreshUrl = chatPage?.dataset.chatRefreshUrl;
+    const conversationId = chatPage?.dataset.chatConversationId;
     let chatTaken = false;
+    let lastSignature = null;
+    let updateCheckInFlight = false;
 
     if (!chatPage) {
         return;
@@ -21,14 +24,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const checkChatAvailability = async () => {
+    const checkForChatUpdates = async () => {
 
-        if (!availabilityUrl || chatTaken) {
+        if (!refreshUrl || chatTaken || updateCheckInFlight) {
             return;
         }
 
+        updateCheckInFlight = true;
+
         try {
-            const response = await fetch(availabilityUrl, {
+            const endpoint = new URL(refreshUrl, window.location.origin);
+
+            if (conversationId) {
+                endpoint.searchParams.set("conversation", conversationId);
+            }
+
+            const response = await fetch(endpoint, {
                 credentials: "same-origin",
             });
 
@@ -36,28 +47,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const availability = await response.json();
+            const updateState = await response.json();
 
-            if (availability.state === "taken") {
+            if (updateState.active_state === "taken") {
                 showTakenNotice();
+                return;
+            }
+
+            const currentSignature = JSON.stringify(updateState.signature);
+
+            if (lastSignature === null) {
+                lastSignature = currentSignature;
+                return;
+            }
+
+            if (currentSignature !== lastSignature) {
+                if (document.activeElement === composer) {
+                    return;
+                }
+
+                window.location.reload();
             }
         } catch (_) {
-            // The regular page refresh remains the fallback if polling fails.
+            // A manual browser refresh remains available if the update check fails.
+        } finally {
+            updateCheckInFlight = false;
         }
     };
 
-    checkChatAvailability();
+    checkForChatUpdates();
 
     window.setInterval(() => {
 
-        checkChatAvailability();
-
-        if (
-            document.visibilityState === "visible"
-            && !chatTaken
-            && document.activeElement !== composer
-        ) {
-            window.location.reload();
+        if (document.visibilityState === "visible") {
+            checkForChatUpdates();
         }
 
     }, 5000);

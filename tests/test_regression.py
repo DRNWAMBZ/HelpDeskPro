@@ -532,6 +532,13 @@ class HelpDeskRegressionTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 302)
 
+        response = first_admin_client.get(
+            f"/chat/refresh-state?conversation={conversation_id}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["active_state"], "assigned_to_you")
+        self.assertEqual(len(response.json["signature"]), 1)
+
         self.sign_in(second_admin_client, "admin-two@example.test")
         response = second_admin_client.get(
             f"/chat?conversation={conversation_id}",
