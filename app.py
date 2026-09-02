@@ -3404,6 +3404,7 @@ def update_ticket_tags(ticket_id):
 def admin_users():
 
     search = request.args.get("search", "").strip()
+    sort = request.args.get("sort", "id_desc").strip()
     users_query = User.query
 
     if search:
@@ -3418,14 +3419,18 @@ def admin_users():
 
         users_query = users_query.filter(or_(*user_filters))
 
+    if sort not in {"id_asc", "id_desc"}:
+        sort = "id_desc"
+
     users = users_query.order_by(
-        User.id.desc()
+        User.id.asc() if sort == "id_asc" else User.id.desc()
     ).all()
 
     return render_template(
         "admin/users.html",
         users=users,
         search=search,
+        sort=sort,
     )
 
 

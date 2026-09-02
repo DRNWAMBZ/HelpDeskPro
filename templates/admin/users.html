@@ -80,7 +80,19 @@ Manage Users
 
                     <tr>
 
-                        <th>ID</th>
+                        <th>
+                            <a
+                                href="{{ url_for('admin_users', search=search, sort='id_asc' if sort == 'id_desc' else 'id_desc') }}"
+                                class="admin-sort-link"
+                                aria-label="Sort users by ID {{ 'ascending' if sort == 'id_desc' else 'descending' }}"
+                            >
+                                ID
+                                <i
+                                    class="fa-solid {% if sort == 'id_asc' %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"
+                                    aria-hidden="true"
+                                ></i>
+                            </a>
+                        </th>
 
                         <th>Username</th>
 

@@ -487,6 +487,24 @@
     font-size: 13px;
 }
 
+.admin-sort-link {
+    align-items: center;
+    color: inherit;
+    display: inline-flex;
+    gap: 7px;
+    text-decoration: none;
+}
+
+.admin-sort-link:hover,
+.admin-sort-link:focus-visible {
+    color: #1767A8;
+    text-decoration: underline;
+}
+
+.admin-sort-link i {
+    font-size: 11px;
+}
+
 .admin-table td {
     padding: 15px 14px;
 

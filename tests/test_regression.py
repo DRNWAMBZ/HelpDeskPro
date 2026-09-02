@@ -167,6 +167,10 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"staff@example.test", response.data)
 
+        response = admin_client.get("/admin/users?sort=id_asc")
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(response.data.index(b"#1"), response.data.index(b"#4"))
+
         token = self.csrf_token(
             admin_client,
             f"/admin/ticket/{ticket_id}",
