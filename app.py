@@ -1350,6 +1350,21 @@ def safe_csv_cell(value):
     return f"'{value}" if value.startswith(("=", "+", "-", "@")) else value
 
 
+def format_duration(seconds):
+    """Format a positive duration in a compact, dashboard-friendly form."""
+
+    total_minutes = max(0, round(seconds / 60))
+    days, remaining_minutes = divmod(total_minutes, 24 * 60)
+    hours, minutes = divmod(remaining_minutes, 60)
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hours or days:
+        parts.append(f"{hours}h")
+    parts.append(f"{minutes}m")
+    return " ".join(parts)
+
+
 @app.context_processor
 def inject_notification_count():
 
@@ -3149,6 +3164,48 @@ def admin_dashboard():
         Ticket.category.asc(),
     ).all()
 
+    priority_breakdown = db.session.query(
+        Ticket.priority,
+        func.count(Ticket.id),
+    ).filter(*ticket_filters).group_by(Ticket.priority).order_by(
+        func.count(Ticket.id).desc(),
+        Ticket.priority.asc(),
+    ).all()
+
+    resolution_query = db.session.query(
+        Ticket.created_at,
+        func.min(TicketStatusHistory.created_at),
+    ).join(
+        TicketStatusHistory,
+        TicketStatusHistory.ticket_id == Ticket.id,
+    ).filter(
+        TicketStatusHistory.new_status == "Resolved",
+    )
+    if report_start:
+        resolution_query = resolution_query.filter(
+            TicketStatusHistory.created_at >= report_start,
+        )
+    if report_end:
+        resolution_query = resolution_query.filter(
+            TicketStatusHistory.created_at < report_end + timedelta(days=1),
+        )
+
+    resolution_rows = resolution_query.group_by(
+        Ticket.id,
+        Ticket.created_at,
+    ).all()
+    resolution_seconds = [
+        (resolved_at - created_at).total_seconds()
+        for created_at, resolved_at in resolution_rows
+        if created_at and resolved_at and resolved_at >= created_at
+    ]
+    resolution_sample_count = len(resolution_seconds)
+    average_resolution_time = (
+        format_duration(sum(resolution_seconds) / resolution_sample_count)
+        if resolution_sample_count
+        else None
+    )
+
     satisfaction_query = ChatSatisfactionRating.query
     if report_start:
         satisfaction_query = satisfaction_query.filter(
@@ -3178,6 +3235,9 @@ def admin_dashboard():
         critical_open_tickets=critical_open_tickets,
         tickets_created_this_week=tickets_created_this_week,
         category_breakdown=category_breakdown,
+        priority_breakdown=priority_breakdown,
+        average_resolution_time=average_resolution_time,
+        resolution_sample_count=resolution_sample_count,
         satisfaction_count=satisfaction_count,
         average_satisfaction=average_satisfaction,
         recent_tickets=recent_tickets,

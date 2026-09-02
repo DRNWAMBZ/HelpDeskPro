@@ -29,6 +29,7 @@ from app import (  # noqa: E402
     Ticket,
     TicketAttachment,
     TicketReply,
+    TicketStatusHistory,
     User,
     app,
     db,
@@ -211,6 +212,24 @@ class HelpDeskRegressionTests(unittest.TestCase):
                 user_id=self.user_id,
             )
             db.session.add(overdue_ticket)
+            resolved_ticket = Ticket(
+                ticket_number=2,
+                subject="Resolved printer fault",
+                description="The printer was repaired.",
+                priority="High",
+                category="Hardware",
+                status="Resolved",
+                created_at=datetime.utcnow() - timedelta(hours=2),
+                user_id=self.user_id,
+            )
+            db.session.add(resolved_ticket)
+            db.session.flush()
+            db.session.add(TicketStatusHistory(
+                ticket_id=resolved_ticket.id,
+                changed_by_id=self.admin_id,
+                previous_status="In Progress",
+                new_status="Resolved",
+            ))
             db.session.add(ChatSatisfactionRating(
                 user_id=self.user_id,
                 admin_id=self.admin_id,
@@ -228,6 +247,9 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertIn(b"Overdue", response.data)
         self.assertIn(b"Live chat satisfaction", response.data)
         self.assertIn(b"Network &amp; WiFi", response.data)
+        self.assertIn(b"Tickets by priority", response.data)
+        self.assertIn(b"Average resolution time", response.data)
+        self.assertIn(b"2h 0m", response.data)
 
         today = datetime.utcnow().date().isoformat()
         response = admin_client.get(

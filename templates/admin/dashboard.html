@@ -146,6 +146,52 @@ Admin Dashboard
             <p class="admin-report-note">Use ticket status and due dates to keep the queue moving.</p>
         </div>
 
+        <div class="admin-report-card admin-priority-report">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-flag" aria-hidden="true"></i></span>
+                <div>
+                    <h2>Tickets by priority</h2>
+                    <p>How urgent the selected support workload is.</p>
+                </div>
+            </div>
+            {% if priority_breakdown %}
+                <ul class="admin-category-list admin-priority-list">
+                    {% for priority, count in priority_breakdown %}
+                        <li>
+                            <span class="priority-badge priority-{{ priority|lower }}">{{ priority }}</span>
+                            <strong>{{ count }}</strong>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="admin-report-empty">
+                    <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                    No ticket data yet.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="admin-report-card admin-resolution-report">
+            <div class="admin-report-card-heading">
+                <span class="admin-report-icon"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></span>
+                <div>
+                    <h2>Average resolution time</h2>
+                    <p>Time from ticket creation to its first recorded resolution.</p>
+                </div>
+            </div>
+            {% if average_resolution_time %}
+                <div class="admin-report-feature-metric">
+                    <strong>{{ average_resolution_time }}</strong>
+                    <span>across {{ resolution_sample_count }} resolved ticket{{ "s" if resolution_sample_count != 1 else "" }}</span>
+                </div>
+            {% else %}
+                <div class="admin-report-empty">
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    No tracked ticket resolutions in this period yet.
+                </div>
+            {% endif %}
+        </div>
+
         <div class="admin-report-card admin-report-card-satisfaction">
             <div class="admin-report-card-heading">
                 <span class="admin-report-icon"><i class="fa-solid fa-star"></i></span>

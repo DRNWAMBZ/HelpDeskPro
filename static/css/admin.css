@@ -375,6 +375,16 @@
     background: linear-gradient(150deg, #eff8ff 0%, #ffffff 75%);
 }
 
+.admin-resolution-report {
+    background: linear-gradient(150deg, #f4fbf7 0%, #ffffff 75%);
+    grid-column: span 2;
+}
+
+.admin-resolution-report .admin-report-icon {
+    background: #eaf6ee;
+    color: #217043;
+}
+
 .admin-report-card-satisfaction {
     background: linear-gradient(145deg, #0d4779 0%, #1767a8 100%);
     border-color: #0d4779;
@@ -728,7 +738,8 @@
     }
 
     .admin-report-card-alert,
-    .admin-category-report {
+    .admin-category-report,
+    .admin-resolution-report {
         grid-column: auto;
     }
 
