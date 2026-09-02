@@ -362,6 +362,10 @@ class HelpDeskRegressionTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(send_email.call_count, 2)
+            self.assertIn(
+                f"/admin/ticket/{ticket_id}",
+                send_email.call_args_list[0].kwargs["ticket_url"],
+            )
 
             send_email.reset_mock()
             token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
@@ -371,6 +375,10 @@ class HelpDeskRegressionTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 302)
             send_email.assert_called_once()
+            self.assertIn(
+                f"/ticket/{ticket_id}",
+                send_email.call_args.kwargs["ticket_url"],
+            )
 
             send_email.reset_mock()
             token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
@@ -380,6 +388,10 @@ class HelpDeskRegressionTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 302)
             send_email.assert_called_once()
+            self.assertIn(
+                f"/ticket/{ticket_id}",
+                send_email.call_args.kwargs["ticket_url"],
+            )
 
             send_email.reset_mock()
             token = self.csrf_token(admin_client, f"/admin/ticket/{ticket_id}")
@@ -389,6 +401,43 @@ class HelpDeskRegressionTests(unittest.TestCase):
             )
             self.assertEqual(response.status_code, 302)
             send_email.assert_called_once()
+            self.assertIn(
+                f"/ticket/{ticket_id}",
+                send_email.call_args.kwargs["ticket_url"],
+            )
+
+    def test_ticket_link_returns_staff_to_the_requested_ticket_after_login(self):
+        with app.app_context():
+            ticket = Ticket(
+                ticket_number=1,
+                subject="Direct ticket link",
+                description="Check the email-link login return path.",
+                priority="Low",
+                category="Other",
+                status="Open",
+                user_id=self.user_id,
+            )
+            db.session.add(ticket)
+            db.session.commit()
+            ticket_id = ticket.id
+
+        client = app.test_client()
+        response = client.get(f"/ticket/{ticket_id}")
+        self.assertEqual(response.status_code, 302)
+        login_path = response.headers["Location"]
+        self.assertIn("/login?next=", login_path)
+
+        token = self.csrf_token(client, login_path)
+        response = client.post(
+            login_path,
+            data={
+                "csrf_token": token,
+                "email": "staff@example.test",
+                "password": "Password123!",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.headers["Location"].endswith(f"/ticket/{ticket_id}"))
 
     def test_chat_claim_feedback_and_close(self):
         user_client = app.test_client()

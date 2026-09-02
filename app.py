@@ -91,9 +91,10 @@ app.config["SESSION_COOKIE_SECURE"] = (
 )
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
 app.config["PREFERRED_URL_SCHEME"] = (
-    "https"
-    if app_environment == "production"
-    else "http"
+    os.environ.get(
+        "EXTERNAL_URL_SCHEME",
+        "https" if app_environment == "production" else "http",
+    ).lower()
 )
 
 trusted_proxy_count = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
@@ -1150,7 +1151,17 @@ def send_password_reset_email(user, token):
     return True
 
 
-def send_ticket_notification_email(user, subject, body):
+def ticket_email_url(ticket, recipient):
+    endpoint = "admin_ticket_details" if recipient.is_admin else "ticket_details"
+    return url_for(
+        endpoint,
+        ticket_id=ticket.id,
+        _external=True,
+        _scheme=app.config["PREFERRED_URL_SCHEME"],
+    )
+
+
+def send_ticket_notification_email(user, subject, body, ticket_url=None):
     """Send a non-critical ticket email without affecting the ticket action."""
 
     if not app.config["MAIL_TICKET_NOTIFICATIONS"]:
@@ -1168,10 +1179,13 @@ def send_ticket_notification_email(user, subject, body):
     email["Subject"] = subject
     email["From"] = app.config["MAIL_FROM"]
     email["To"] = user.email
-    email.set_content(
+    email_body = (
         f"Hello {user.username},\n\n{body}\n\n"
         "Sign in to HelpDesk Pro to view the full conversation."
     )
+    if ticket_url:
+        email_body += f"\n\nView ticket: {ticket_url}"
+    email.set_content(email_body)
 
     try:
         with smtplib.SMTP(
@@ -1414,6 +1428,15 @@ def format_duration(seconds):
     return " ".join(parts)
 
 
+def get_safe_next_url():
+    """Accept only local post-login destinations to avoid open redirects."""
+
+    next_url = request.args.get("next", "")
+    if next_url.startswith("/") and not next_url.startswith("//"):
+        return next_url
+    return None
+
+
 @app.context_processor
 def inject_notification_count():
 
@@ -1516,6 +1539,10 @@ def login():
             login_user(user)
             session.permanent = True
             clear_rate_limit_attempts("login", identifiers)
+
+            next_url = get_safe_next_url()
+            if next_url:
+                return redirect(next_url)
 
             if user.is_admin:
 
@@ -2166,6 +2193,7 @@ def reply_to_ticket(ticket_id):
                 f"{current_user.username} replied to the support request "
                 f"\"{ticket.subject}\"."
             ),
+            ticket_url=ticket_email_url(ticket, admin),
         )
 
     flash(
@@ -3661,6 +3689,7 @@ def admin_update_ticket_status(ticket_id):
             ticket.user,
             "HelpDesk Pro: your request was resolved",
             f"Your support request \"{ticket.subject}\" has been resolved.",
+            ticket_url=ticket_email_url(ticket, ticket.user),
         )
 
     flash(
@@ -3753,6 +3782,7 @@ def admin_ticket_progress_update(ticket_id):
             ticket.user,
             "HelpDesk Pro: progress update",
             f"Support posted a progress update on \"{ticket.subject}\".",
+            ticket_url=ticket_email_url(ticket, ticket.user),
         )
     flash("Progress update sent to the user.", "success")
 
@@ -3819,6 +3849,7 @@ def admin_reply_to_ticket(ticket_id):
             ticket.user,
             "HelpDesk Pro: support replied",
             f"Support replied to your request \"{ticket.subject}\".",
+            ticket_url=ticket_email_url(ticket, ticket.user),
         )
 
     flash(
