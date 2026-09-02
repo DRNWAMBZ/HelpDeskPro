@@ -176,6 +176,28 @@ TICKET_PROGRESS_UPDATES = {
     "escalated": "Your issue has been escalated for further review.",
 }
 
+# Keep record-heavy pages quick to scan without hiding the existing filters.
+PAGE_SIZE = 10
+
+
+def paginate_query(query):
+    """Return one safe, consistently sized page from a SQLAlchemy query."""
+    page = max(request.args.get("page", 1, type=int) or 1, 1)
+    pagination = query.paginate(
+        page=page,
+        per_page=PAGE_SIZE,
+        error_out=False,
+    )
+
+    if pagination.pages and page > pagination.pages:
+        pagination = query.paginate(
+            page=pagination.pages,
+            per_page=PAGE_SIZE,
+            error_out=False,
+        )
+
+    return pagination
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
 
@@ -2020,15 +2042,16 @@ def create_ticket():
 @login_required
 def tickets():
 
-    user_tickets = Ticket.query.filter_by(
+    tickets_pagination = paginate_query(Ticket.query.filter_by(
         user_id=current_user.id
     ).order_by(
         Ticket.created_at.desc()
-    ).all()
+    ))
 
     return render_template(
         "tickets.html",
-        tickets=user_tickets,
+        tickets=tickets_pagination.items,
+        tickets_pagination=tickets_pagination,
     )
 
 
@@ -2381,16 +2404,17 @@ def settings():
 @login_required
 def notifications():
 
-    user_notifications = Notification.query.filter_by(
+    notifications_pagination = paginate_query(Notification.query.filter_by(
         recipient_id=current_user.id,
     ).order_by(
         Notification.is_read.asc(),
         Notification.created_at.desc(),
-    ).all()
+    ))
 
     return render_template(
         "notifications.html",
-        notifications=user_notifications,
+        notifications=notifications_pagination.items,
+        notifications_pagination=notifications_pagination,
     )
 
 
@@ -2499,9 +2523,9 @@ def knowledge():
             category=category,
         )
 
-    articles = articles_query.order_by(
+    articles_pagination = paginate_query(articles_query.order_by(
         KnowledgeArticle.updated_at.desc(),
-    ).all()
+    ))
 
     categories = [
         row[0]
@@ -2516,7 +2540,8 @@ def knowledge():
 
     return render_template(
         "knowledge.html",
-        articles=articles,
+        articles=articles_pagination.items,
+        articles_pagination=articles_pagination,
         categories=categories,
         search=search,
         selected_category=category,
@@ -2547,13 +2572,14 @@ def knowledge_article(article_id):
 @admin_required
 def admin_knowledge():
 
-    articles = KnowledgeArticle.query.order_by(
+    articles_pagination = paginate_query(KnowledgeArticle.query.order_by(
         KnowledgeArticle.updated_at.desc(),
-    ).all()
+    ))
 
     return render_template(
         "admin/knowledge.html",
-        articles=articles,
+        articles=articles_pagination.items,
+        articles_pagination=articles_pagination,
     )
 
 
@@ -3530,7 +3556,14 @@ def admin_tickets():
     if sort not in sort_options:
         sort = "newest"
 
-    filtered_tickets = query.order_by(sort_options[sort]).all()
+    open_ticket_count = query.filter(Ticket.status == "Open").count()
+    in_progress_ticket_count = query.filter(
+        Ticket.status == "In Progress"
+    ).count()
+    resolved_ticket_count = query.filter(Ticket.status == "Resolved").count()
+
+    tickets_pagination = paginate_query(query.order_by(sort_options[sort]))
+    filtered_tickets = tickets_pagination.items
 
     # Keep your current queue layout
     open_tickets = [
@@ -3557,6 +3590,10 @@ def admin_tickets():
         open_tickets=open_tickets,
         in_progress_tickets=in_progress_tickets,
         resolved_tickets=resolved_tickets,
+        open_ticket_count=open_ticket_count,
+        in_progress_ticket_count=in_progress_ticket_count,
+        resolved_ticket_count=resolved_ticket_count,
+        tickets_pagination=tickets_pagination,
 
         search=search,
         status_filter=status_filter,
@@ -3939,13 +3976,14 @@ def admin_users():
     if sort not in {"id_asc", "id_desc"}:
         sort = "id_desc"
 
-    users = users_query.order_by(
+    users_pagination = paginate_query(users_query.order_by(
         User.id.asc() if sort == "id_asc" else User.id.desc()
-    ).all()
+    ))
 
     return render_template(
         "admin/users.html",
-        users=users,
+        users=users_pagination.items,
+        users_pagination=users_pagination,
         search=search,
         sort=sort,
     )

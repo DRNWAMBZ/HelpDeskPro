@@ -110,6 +110,22 @@ Tickets
 
         </ul>
 
+        {% if tickets_pagination.pages > 1 %}
+            <nav class="pagination-nav" aria-label="Ticket pages">
+                <span class="pagination-summary">
+                    Page {{ tickets_pagination.page }} of {{ tickets_pagination.pages }}
+                </span>
+                <div class="pagination-links">
+                    {% if tickets_pagination.has_prev %}
+                        <a href="{{ url_for('tickets', page=tickets_pagination.prev_num) }}">Previous</a>
+                    {% endif %}
+                    {% if tickets_pagination.has_next %}
+                        <a href="{{ url_for('tickets', page=tickets_pagination.next_num) }}">Next</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+
         {% else %}
 
         <div class="empty-tickets">

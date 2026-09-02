@@ -52,6 +52,22 @@ Manage Knowledge Base | HelpDesk Pro
                     </article>
                 {% endfor %}
             </div>
+
+            {% if articles_pagination.pages > 1 %}
+                <nav class="pagination-nav" aria-label="Knowledge-base management pages">
+                    <span class="pagination-summary">
+                        Page {{ articles_pagination.page }} of {{ articles_pagination.pages }}
+                    </span>
+                    <div class="pagination-links">
+                        {% if articles_pagination.has_prev %}
+                            <a href="{{ url_for('admin_knowledge', page=articles_pagination.prev_num) }}">Previous</a>
+                        {% endif %}
+                        {% if articles_pagination.has_next %}
+                            <a href="{{ url_for('admin_knowledge', page=articles_pagination.next_num) }}">Next</a>
+                        {% endif %}
+                    </div>
+                </nav>
+            {% endif %}
         {% else %}
             <div class="knowledge-empty-state">
                 <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>

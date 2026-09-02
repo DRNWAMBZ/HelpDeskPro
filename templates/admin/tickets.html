@@ -253,7 +253,7 @@ Ticket Management
             </div>
 
             <span class="status-badge status-open">
-                {{ open_tickets|length }}
+                {{ open_ticket_count }}
             </span>
         </div>
 
@@ -319,7 +319,7 @@ Ticket Management
             </div>
 
             <span class="status-badge status-in-progress">
-                {{ in_progress_tickets|length }}
+                {{ in_progress_ticket_count }}
             </span>
         </div>
 
@@ -385,7 +385,7 @@ Ticket Management
             </div>
 
             <span class="status-badge status-resolved">
-                {{ resolved_tickets|length }}
+                {{ resolved_ticket_count }}
             </span>
         </div>
 
@@ -439,6 +439,22 @@ Ticket Management
         {% endif %}
 
     </div>
+
+    {% if tickets_pagination.pages > 1 %}
+        <nav class="pagination-nav" aria-label="Ticket management pages">
+            <span class="pagination-summary">
+                Page {{ tickets_pagination.page }} of {{ tickets_pagination.pages }}
+            </span>
+            <div class="pagination-links">
+                {% if tickets_pagination.has_prev %}
+                    <a href="{{ url_for('admin_tickets', page=tickets_pagination.prev_num, search=search, status=status_filter, priority=priority_filter, category=category_filter, due=due_filter, sort=sort) }}">Previous</a>
+                {% endif %}
+                {% if tickets_pagination.has_next %}
+                    <a href="{{ url_for('admin_tickets', page=tickets_pagination.next_num, search=search, status=status_filter, priority=priority_filter, category=category_filter, due=due_filter, sort=sort) }}">Next</a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
 
 </div>
 

@@ -82,7 +82,7 @@ Manage Users
 
                         <th>
                             <a
-                                href="{{ url_for('admin_users', search=search, sort='id_asc' if sort == 'id_desc' else 'id_desc') }}"
+                                href="{{ url_for('admin_users', page=1, search=search, sort='id_asc' if sort == 'id_desc' else 'id_desc') }}"
                                 class="admin-sort-link"
                                 aria-label="Sort users by ID {{ 'ascending' if sort == 'id_desc' else 'descending' }}"
                             >
@@ -225,6 +225,22 @@ Manage Users
             </table>
 
         </div>
+
+        {% if users_pagination.pages > 1 %}
+            <nav class="pagination-nav" aria-label="User pages">
+                <span class="pagination-summary">
+                    Page {{ users_pagination.page }} of {{ users_pagination.pages }}
+                </span>
+                <div class="pagination-links">
+                    {% if users_pagination.has_prev %}
+                        <a href="{{ url_for('admin_users', page=users_pagination.prev_num, search=search, sort=sort) }}">Previous</a>
+                    {% endif %}
+                    {% if users_pagination.has_next %}
+                        <a href="{{ url_for('admin_users', page=users_pagination.next_num, search=search, sort=sort) }}">Next</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
 
     </div>
 

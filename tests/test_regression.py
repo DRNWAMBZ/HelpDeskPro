@@ -26,6 +26,7 @@ from app import (  # noqa: E402
     ChatConversation,
     ChatMessage,
     ChatSatisfactionRating,
+    KnowledgeArticle,
     Notification,
     Ticket,
     TicketAttachment,
@@ -112,6 +113,66 @@ class HelpDeskRegressionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Fresh Staff", response.data)
         self.assertIn(b"New", response.data)
+
+    def test_record_lists_paginate_after_ten_items(self):
+        with app.app_context():
+            extra_users = [
+                User(
+                    username=f"Pagination User {number}",
+                    email=f"pagination-{number}@example.test",
+                    password=generate_password_hash("Password123!"),
+                )
+                for number in range(1, 8)
+            ]
+            tickets = [
+                Ticket(
+                    ticket_number=number,
+                    subject=f"Pagination ticket {number}",
+                    description="Pagination regression test ticket.",
+                    user_id=self.user_id,
+                )
+                for number in range(1, 12)
+            ]
+            db.session.add_all(extra_users + tickets)
+            db.session.commit()
+
+            db.session.add_all([
+                Notification(
+                    recipient_id=self.user_id,
+                    ticket_id=ticket.id,
+                    message=f"Pagination notification {ticket.ticket_number}",
+                )
+                for ticket in tickets
+            ])
+            db.session.add_all([
+                KnowledgeArticle(
+                    title=f"Pagination article {number}",
+                    category="General",
+                    content="Pagination regression test article.",
+                    is_published=True,
+                    author_id=self.admin_id,
+                )
+                for number in range(1, 12)
+            ])
+            db.session.commit()
+
+        user_client = app.test_client()
+        admin_client = app.test_client()
+        self.sign_in(user_client, "staff@example.test")
+        self.sign_in(admin_client, "admin-one@example.test")
+
+        for client, path, expected in [
+            (user_client, "/tickets?page=2", b"Pagination ticket 1"),
+            (user_client, "/notifications?page=2", b"Pagination notification 1"),
+            (user_client, "/knowledge?page=2", b"Pagination article 1"),
+            (admin_client, "/admin/knowledge?page=2", b"Pagination article 1"),
+            (admin_client, "/admin/users?page=2", b"Admin One"),
+            (admin_client, "/admin/tickets?page=2", b"Pagination ticket 1"),
+        ]:
+            response = client.get(path)
+            self.assertEqual(response.status_code, 200, path)
+            self.assertIn(expected, response.data, path)
+            self.assertIn(b"Page 2 of", response.data, path)
 
     def tearDown(self):
         with app.app_context():

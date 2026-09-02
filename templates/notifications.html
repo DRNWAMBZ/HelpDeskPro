@@ -93,6 +93,22 @@ Notifications | HelpDesk Pro
             {% endfor %}
 
         </div>
+
+        {% if notifications_pagination.pages > 1 %}
+            <nav class="pagination-nav" aria-label="Notification pages">
+                <span class="pagination-summary">
+                    Page {{ notifications_pagination.page }} of {{ notifications_pagination.pages }}
+                </span>
+                <div class="pagination-links">
+                    {% if notifications_pagination.has_prev %}
+                        <a href="{{ url_for('notifications', page=notifications_pagination.prev_num) }}">Previous</a>
+                    {% endif %}
+                    {% if notifications_pagination.has_next %}
+                        <a href="{{ url_for('notifications', page=notifications_pagination.next_num) }}">Next</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
     {% else %}
         <div class="notifications-empty-state">
             <div class="notifications-empty-icon">

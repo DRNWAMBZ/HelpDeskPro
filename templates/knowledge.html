@@ -80,6 +80,22 @@ Knowledge Base | HelpDesk Pro
                     </article>
                 {% endfor %}
             </div>
+
+            {% if articles_pagination.pages > 1 %}
+                <nav class="pagination-nav" aria-label="Knowledge-base article pages">
+                    <span class="pagination-summary">
+                        Page {{ articles_pagination.page }} of {{ articles_pagination.pages }}
+                    </span>
+                    <div class="pagination-links">
+                        {% if articles_pagination.has_prev %}
+                            <a href="{{ url_for('knowledge', page=articles_pagination.prev_num, search=search, category=selected_category) }}">Previous</a>
+                        {% endif %}
+                        {% if articles_pagination.has_next %}
+                            <a href="{{ url_for('knowledge', page=articles_pagination.next_num, search=search, category=selected_category) }}">Next</a>
+                        {% endif %}
+                    </div>
+                </nav>
+            {% endif %}
         {% else %}
             <div class="knowledge-empty-state">
                 <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
