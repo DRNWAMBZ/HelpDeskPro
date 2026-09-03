@@ -6373,6 +6373,85 @@ html {
 
 }
 
+/* Mobile More sheet — final rules. This sheet is intentionally independent
+   from the retired top bar and contains navigation links only. */
+@media (max-width: 700px) {
+    .sidebar {
+        background: transparent !important;
+        box-shadow: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        pointer-events: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        width: 100% !important;
+    }
+
+    .sidebar-brand,
+    .sidebar-mobile-toggle,
+    .sidebar-mobile-search,
+    .mobile-help-search,
+    .sidebar.is-mobile-open .sidebar-mobile-toggle,
+    .sidebar.is-mobile-open .sidebar-mobile-search,
+    .sidebar.is-mobile-open .mobile-help-search { display: none !important; }
+
+    .sidebar:not(.is-mobile-open) .sidebar-nav { display: none !important; }
+    .sidebar.is-mobile-open { pointer-events: auto !important; }
+    .sidebar.is-mobile-open .sidebar-nav {
+        background: linear-gradient(160deg, #073052, #0f4c81) !important;
+        border: 1px solid rgba(255,255,255,.14) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 19px 38px rgba(3,37,65,.26) !important;
+        display: grid !important;
+        margin: 12px !important;
+        max-height: calc(100dvh - 106px) !important;
+        overflow-y: auto !important;
+        padding: 12px !important;
+    }
+}
+
+/* One-time post-login transition for the user workspace. */
+.dashboard-login-loader {
+    align-items: center;
+    background: rgba(246, 250, 253, .96);
+    display: flex;
+    flex-direction: column;
+    inset: 0;
+    justify-content: center;
+    position: fixed;
+    transition: opacity .24s ease, visibility .24s ease;
+    z-index: 2200;
+}
+
+.dashboard-login-loader-mark {
+    align-items: center;
+    animation: dashboard-loader-bounce .78s ease-in-out infinite;
+    background: #e8f3fb;
+    border-radius: 26px;
+    display: flex;
+    height: 94px;
+    justify-content: center;
+    margin-bottom: 18px;
+    width: 94px;
+}
+
+.dashboard-login-loader-mark img { height: 70px; width: 70px; }
+.dashboard-login-loader strong { color: #143f67; font-size: 20px; }
+.dashboard-login-loader span { color: #6b8498; font-size: 13px; margin-top: 6px; }
+.dashboard-login-loader.is-leaving { opacity: 0; visibility: hidden; }
+
+@keyframes dashboard-loader-bounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-login-loader-mark { animation: none; }
+    .dashboard-login-loader { transition: none; }
+}
+
 /* Dashboard-only phone navigation: the bottom bar owns navigation, while the
    sidebar becomes an overlay opened by More. */
 @media (max-width: 700px) {

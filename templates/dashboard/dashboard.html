@@ -6,6 +6,15 @@ Dashboard
 
 {% block content %}
 
+{% if show_login_loader %}
+    <div class="dashboard-login-loader" role="status" aria-live="polite" aria-label="Opening your HelpDesk workspace">
+        <div class="dashboard-login-loader-mark"><img src="{{ url_for('static', filename='images/drn-tech-badge.png') }}" alt=""></div>
+        <strong>Welcome back</strong>
+        <span>Opening your support workspace</span>
+    </div>
+    <script src="{{ url_for('static', filename='js/dashboard-loader.js') }}" defer></script>
+{% endif %}
+
 <div class="user-dashboard admin-page">
 
     <section class="mobile-dashboard-top mobile-dashboard-welcome" aria-label="Welcome to HelpDesk Pro">

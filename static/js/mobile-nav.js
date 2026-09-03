@@ -42,7 +42,6 @@
         moreToggle.addEventListener('click', () => {
             setSearchState(false);
             setMenuState(!sidebar.classList.contains('is-mobile-open'));
-            toggle.focus();
         });
     }
 
@@ -61,5 +60,10 @@
             setMenuState(false);
             setSearchState(false);
         }
+    });
+
+    window.addEventListener('pageshow', () => {
+        setMenuState(false);
+        setSearchState(false);
     });
 })();

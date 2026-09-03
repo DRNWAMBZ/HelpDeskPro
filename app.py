@@ -1572,6 +1572,8 @@ def login():
                     url_for("admin_dashboard")
                 )
 
+            session["show_dashboard_loader"] = True
+
             return redirect(
                 url_for("dashboard")
             )
@@ -1983,6 +1985,11 @@ def register():
 @login_required
 def dashboard():
 
+    show_login_loader = session.pop(
+        "show_dashboard_loader",
+        False,
+    )
+
     user_tickets = Ticket.query.filter_by(
         user_id=current_user.id
     ).order_by(
@@ -2015,6 +2022,7 @@ def dashboard():
         in_progress_tickets=in_progress_tickets,
         resolved_tickets=resolved_tickets,
         recent_tickets=recent_tickets,
+        show_login_loader=show_login_loader,
     )
 
 
