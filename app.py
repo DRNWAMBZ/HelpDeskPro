@@ -1,3 +1,9 @@
+"""HelpDesk Pro application entry point.
+
+Sections are grouped as configuration, data models, security helpers, service
+helpers, and user/admin routes so that the project remains easy to navigate.
+"""
+
 from sqlalchemy import text, or_, func
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -4631,4 +4637,4 @@ if __name__ == "__main__":
     with app.app_context():
         ensure_database_schema()
 
-    app.run(debug=True)
+    app.run(debug=app_environment == "development")
