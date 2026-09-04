@@ -26,7 +26,7 @@ copy .env.example .env
 python app.py
 ```
 
-Open `http://127.0.0.1:5000`. Keep `.env` private; it is intentionally excluded from Git.
+Open `http://127.0.0.1:5000`.
 
 For PostgreSQL, also install `requirements-postgresql.txt` and follow [docs/postgresql-migration.md](docs/postgresql-migration.md).
 
@@ -53,4 +53,3 @@ The repository includes application source, templates, static assets, migrations
 - [Project roadmap](docs/project-roadmap.md)
 - [PostgreSQL migration guide](docs/postgresql-migration.md)
 - [Security review](docs/security-review-2026-09-03.md)
-- [ChatGPT handover](docs/chatgpt-handover.md)
